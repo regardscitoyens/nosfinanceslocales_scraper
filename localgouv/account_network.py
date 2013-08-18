@@ -2,15 +2,6 @@
 
 from scrapy.selector import HtmlXPathSelector
 
-# kel objectifs?
-# - parser le html: il faut connaître la relation entre les élements du budgets,
-# connaître le nom de chaque ligne
-# - il serait pas mal de savoir les relations numériques entre les éléments du bugets pour vérifier
-# qu'il n'y a pas d'erreurs
-# - un compte contient des lignes comptables, des sections pour orgagniser la présentation
-# du compte, des dépendances entre une ligne de compte qui englobe d'autres lignes/opérations
-#
-
 class Network(object):
     """Directed graph. Mainly taken from networkx lib, but simplified for the usage"""
     def __init__(self, **attr):
