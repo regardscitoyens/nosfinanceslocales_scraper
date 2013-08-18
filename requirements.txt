@@ -1,0 +1,8 @@
+Scrapy==0.16.5
+Unipath==1.0
+lxml==3.2.3
+numpy==1.7.1
+pandas==0.12.0
+unittest2==0.5.1
+queuelib==1.0
+pyOpenSSL==0.13
