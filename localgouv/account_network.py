@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from scrapy.selector import HtmlXPathSelector
-
 class Network(object):
     """Directed graph. Mainly taken from networkx lib, but simplified for the usage"""
     def __init__(self, **attr):
-        self.data = attr or {}
+        self.metadata = attr or {}
         self.nodes = {}
         self.succ = {}
         self.pred = {}
@@ -48,8 +46,15 @@ class Network(object):
         for node, node_attr in self.nodes.iteritems():
             append = True
             for attr_k, attr_v in attr.iteritems():
-                if node_attr.get(attr_k) <> attr_v:
+                values = node_attr.get(attr_k)
+                if type(values) in [list, tuple]:
                     append = False
+                    for value in values:
+                        if attr_v in value:
+                            append = True
+                else:
+                    if attr_v not in values:
+                        append = False
                 if not append:
                     break
             if append:
@@ -67,14 +72,12 @@ class Network(object):
         raise NotImplementedError
 
 class Account(Network):
-    """A city's account: it is be described as a directed graph made of account lines
-    and sections regrouping others lines and sections.
-    TODO: add edge rules which ensure the relationship between account lines: for example,
-    an account line can be the sum of its children.
+    """A city/group of cities/department/region account: it is described as a
+    directed graph made of account lines and sections regrouping others lines and
+    sections.
+    TODO: add edge rules which ensure the relationship between account lines:
+        for example, an account line can be the sum of its children.
     """
-    def __init__(self, insee_code, city_name, year):
-        super(Account, self).__init__(insee_code=insee_code, year=year, city_name=city_name)
-
     def add_line(self, node, **attr):
         attr = attr or {}
         attr.update(type="accountline")
@@ -89,10 +92,12 @@ class Account(Network):
         raise NotImplementedError
 
 
-def create_town_account(insee_code=None, year=None, city_name=None):
-    """Create an account instance base on account's info
-    from http://alize2.finances.gouv.fr"""
-    account = Account(insee_code, city_name, year)
+def make_city_account():
+    """Create city's account: note that there are little differences between fiscal
+    years...
+    All is based on info from http://www.collectivites-locales.gouv.fr/"""
+
+    account = Account()
     account.add_section('root')
 
     # OPERATINGS OPERATIONS
@@ -123,7 +128,7 @@ def create_town_account(insee_code=None, year=None, city_name=None):
 
     # INVESTMENTS OPERATIONS
     account.add_section('investments', name="OPERATIONS D'INVESTISSEMENT")
-    account.add_edge('root', 'invesments')
+    account.add_edge('root', 'investments')
     ## INVESTMENTS RESSOURCES
     account.add_line('loans', name=u"Emprunts bancaires et dettes assimilées")
     account.add_line('received_subsidies', name=u"Subventions reçues")
@@ -142,7 +147,7 @@ def create_town_account(insee_code=None, year=None, city_name=None):
     account.add_edges('investments_usage', ['facilities_expenses', 'debt_repayments',
                                             'costs_to_allocate', 'fixed_assets'])
 
-    account.add_edges('invesments', ['investment_ressources', 'investments_usage'])
+    account.add_edges('investments', ['investment_ressources', 'investments_usage'])
 
     ## SELF-FINANCING
     account.add_section('self_financing', name=u'AUTOFINANCEMENT')
@@ -159,20 +164,26 @@ def create_town_account(insee_code=None, year=None, city_name=None):
     account.add_edge('root', 'liabilities')
     account.add_line('debt_at_end_year', name=u'Encours total de la dette au 31/12/N')
     account.add_line('debt_annual_costs', name=u'Annuité de la dette')
-    account.add_edges('liabilities', ['debt_at_end_year', 'debt_annual_costs'])
-
+    account.add_line('advances_from_treasury', name=u'Avances du Trésor au 31/12/N')
+    account.add_edges('liabilities', ['debt_at_end_year', 'debt_annual_costs',
+                                      'advances_from_treasury'])
 
     # TAXES
     account.add_section('taxation', name=u'ELEMENTS DE FISCALITE DIRECTE LOCALE')
     account.add_edge('root', 'taxation')
-    account.add_line('home_tax', name=u"Taxe d'habitation (y compris THLV)")
-    account.add_line('property_tax', name=u"Taxe foncière sur les propriétés bâties")
-    account.add_line('land_property_tax', name=u"Taxe foncière sur les propriétés non bâties")
+    account.add_line('home_tax', name=[u"Taxe d'habitation (y compris THLV)",
+                                       u"Produits taxe d'habitation"])
+    account.add_line('property_tax', name=[u"Taxe foncière sur les propriétés bâties",
+                                           u"Produits foncier bâti"])
+    account.add_line('land_property_tax', name=[u"Taxe foncière sur les propriétés non bâties", u"Produits foncier non bâti"])
+    account.add_line('compensation_2010', name=u"Compensation-Relais 2010")
+    account.add_line('business_tax', name=[u"Taxe professionnelle (hors bases écrêtées)",
+                                           u"Produits taxe professionnelle"])
     account.add_line('additionnal_land_property_tax', name=u"Taxe additionnelle à la taxe foncière sur les propriétés non bâties")
     account.add_line('business_property_contribution', name=u'Cotisation foncière des entreprises')
     account.add_edges('taxation', ['home_tax', 'property_tax', 'land_property_tax',
-                                   'additionnal_land_property_tax',
-                                   'business_property_contribution'])
+                                   'additionnal_land_property_tax', 'compensation_2010',
+                                   'business_tax', 'business_property_contribution'])
 
     ## TAX REVENUES
     account.add_section('allocation_tax_revenues', name=u'Les produits des impôts de répartition')
@@ -186,125 +197,8 @@ def create_town_account(insee_code=None, year=None, city_name=None):
 
     account.add_edges('taxation', ['home_tax', 'property_tax', 'land_property_tax',
                                    'additionnal_land_property_tax',
-                                   'allocation_tax_benefits'])
+                                   'allocation_tax_revenues'])
 
     return account
 
-def parse_page_account(icom, dep, year, response):
-    """Parse html account table of a city for a given year
-    crawled from http://alize2.finances.gouv.fr.
-    Return an account instance which gathers all parsed data."""
-
-    hxs = HtmlXPathSelector(response)
-
-    # select tables of interest
-    table1 = hxs.select('.//table')[2]
-    table2 = hxs.select('.//table')[5]
-
-     # In the first table, the second row gives the name of the city
-    trs = table1.select('.//tr')
-    name = trs[1].select('.//td/text()')[1].extract()
-
-    account = create_town_account(insee_code=dep+icom, year=year, city_name=name)
-
-    parse_table_1(table1, account)
-    parse_table_2(table2, account)
-
-    return account
-
-def parse_table_1(table, account):
-    # For this table, we have:
-    # - the value is always in the first column of the table. If there is no value,
-    # this is just section of the account of the city.
-    # - the name of the row is defined the third column.
-
-    icol_value = 0
-    icol_value_per_person = 1
-    icol_name = 3
-
-    for tr in table.select('.//tr')[5:]:
-        tds = tr.select('.//td/text()')
-        if len(tds) < 5:
-            continue
-        # Don't forget to remove whitespace in ascii ?
-        str_value = convert_value(tds[icol_value].extract())
-        value = float(str_value) * 1000
-        str_value_per_person = tds[icol_value_per_person].extract()
-        value_per_person = convert_value(str_value_per_person)
-        # Strip line and remove "dont" keyword.
-        name = tds[icol_name].extract().replace('dont :', '').strip()
-
-        node_type = 'accountline'
-
-        targets = account.find_node(name=name, type=node_type)
-
-        if targets:
-            target = targets[0]
-            if value and value_per_person:
-                account.nodes[target]['value'] = value
-                account.nodes[target]['value_per_person'] = value_per_person
-        else:
-            print "There is no node of name %s and type %s"%(name, node_type)
-
-def parse_table_2(table, account):
-    # This table contains info about taxes. The format of the table is very annoying.
-    # => all the code written here is very specific to this format and will crash as
-    # soon as a slight change of the html will occur.
-    # XXX: This parsing is just a horrible shit
-    # TODO: erase this fucking crappy code, make this parsing acceptable.
-
-    irow_start_1 = 4
-    irow_start_2 = 10
-    irow_start_3 = 17
-    nb_rows = 5
-    nb_rows_3 = 3
-    rows = table.select('.//tr')
-    attr_name = 'basis'
-    parse_tablepart(rows[irow_start_1:irow_start_1+nb_rows], attr_name, 0, account)
-    attr_name = 'cuts_on_deliberation'
-    parse_tablepart(rows[irow_start_1:irow_start_1+nb_rows], attr_name, 4, account)
-    attr_name = 'value'
-    parse_tablepart(rows[irow_start_2:irow_start_2+nb_rows], attr_name, 0, account)
-    attr_name = 'voted_rate'
-    parse_tablepart(rows[irow_start_2:irow_start_2+nb_rows], attr_name, 4, account)
-    parse_tablepart(rows[irow_start_3:irow_start_3+nb_rows_3], attr_name, 4, account)
-    attr_name = 'value'
-    parse_tablepart(rows[irow_start_3:irow_start_3+nb_rows_3], attr_name, 0, account)
-
-def parse_tablepart(rows, attr_name, icol, account):
-    # Attempt to factorize some code... but failed to reach an acceptable code.
-    # XXX: erase all this crap.
-    icol_name = 3
-    for row in rows:
-        tds = row.select('.//td/text()')
-        if len(tds) < 6:
-            continue
-        name = tds[icol_name].extract().strip()
-        targets = account.find_node(name=name, type='accountline')
-        if targets:
-            target = targets[0]
-            str_val = tds[icol].extract()
-            val = convert_value(str_val)
-            if attr_name <> 'voted_rate':
-                val = val * 1000 if val else None
-
-            account.nodes[target][attr_name] = val
-
-            if icol <> 0 and len(tds) == 7:
-                account.nodes[target][attr_name] = convert_value(tds[icol+1].extract())
-
-def convert_value(val):
-    val = val.replace(u'\xa0', '')\
-             .replace(',', '.')\
-             .replace('-', '')\
-             .replace(u'\xa0', '')\
-             .replace(' ', '')
-    if val:
-        if '%' in val:
-            val = float(val.replace('%', ''))/100
-        return float(val)
-    else:
-        return None
-
-
-
+city_account = make_city_account()

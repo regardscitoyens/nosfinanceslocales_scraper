@@ -9,7 +9,8 @@ sys.path.append(Path(__file__).ancestor(2))
 from scrapy.selector import HtmlXPathSelector
 from scrapy.http.response.html import HtmlResponse
 
-from localgouv.account_network import parse_page_account
+from localgouv.account_network import city_account
+from localgouv.account_parsing import parse_city_page_account
 
 class CommuneFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
@@ -18,17 +19,16 @@ class CommuneFinanceParsingTestCase(unittest2.TestCase):
         self.response.body = body
 
     def test_parsing(self):
-        account = parse_page_account("XXXXX", "XX", 2013, self.response)
-
+        data = parse_city_page_account("", "", "2012", self.response)
         # test data parsed from first table
-        self.assertEqual(account.nodes['operating_revenues']['value'], 210000.)
-        self.assertEqual(account.nodes['localtax']['value_per_person'], 289.)
-        self.assertEqual(account.nodes['operating_costs']['value_per_person'], 542.)
+        self.assertEqual(data['operating_revenues']['value'], 210000.)
+        self.assertEqual(data['localtax']['value_per_person'], 289.)
+        self.assertEqual(data['operating_costs']['value_per_person'], 542.)
 
         # test data parsed from second table
-        self.assertEqual(account.nodes['home_tax']['value'], 47000.)
-        self.assertEqual(account.nodes['home_tax']['basis'], 562000.)
-        self.assertEqual(account.nodes['home_tax']['voted_rate'], 0.0839)
+        self.assertEqual(data['home_tax']['value'], 47000.)
+        self.assertEqual(data['home_tax']['basis'], 562000.)
+        self.assertEqual(data['home_tax']['voted_rate'], 0.0839)
 
 if __name__ == '__main__':
     unittest2.main()

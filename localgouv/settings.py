@@ -17,3 +17,6 @@ NEWSPIDER_MODULE = 'localgouv.spiders'
 #DOWNLOAD_DELAY = 0.25
 
 AUTOTHROTTLE_ENABLED = True
+
+#import scrapy
+#scrapy.log.start(logfile="logs/logs", loglevel=scrapy.log.DEBUG, logstdout=True)
