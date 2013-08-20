@@ -14,8 +14,8 @@ dir:
 `scrapy crawl localgouv -o scraped_data_dir/localgouv_2012.json -t json -a year=2012`
 
 Scraped data samples are available in scraped_data directory:
- * (scraped_data/localgouv_2000.sample.json)
- * (scraped_data/localgouv_2012.sample.json)
+ * [localgouv_2000.sample.json](scraped_data/localgouv_2000.sample.json)
+ * [localgouv_2012.sample.json](scraped_data/localgouv_2012.sample.json)
 
 Requirements
 ===========
