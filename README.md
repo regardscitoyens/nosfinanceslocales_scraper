@@ -6,6 +6,10 @@ the website http://www.collectivites-locales.gouv.fr/.
 
 We used scrapy lib to crawl the page and xpaths stuff to scrap data.
 
+To check the quality of the crawling and to analyze data, we use ipython
+notebooks. [Here is one which shows some crawled data on 2012.](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/localgouvdata_analysis.ipynb)
+
+
 Usage
 =====
 
@@ -16,6 +20,7 @@ dir:
 Scraped data samples are available in scraped_data directory:
  * [localgouv_2000.sample.json](scraped_data/localgouv_2000.sample.json)
  * [localgouv_2012.sample.json](scraped_data/localgouv_2012.sample.json)
+
 
 Requirements
 ===========
