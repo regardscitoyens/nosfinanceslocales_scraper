@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import re
 from collections import defaultdict
 
 from scrapy.selector import HtmlXPathSelector
@@ -20,11 +20,18 @@ def parse_city_page_account(icom, dep, year, response):
     trs = table1.select('.//tr')
     name = trs[1].select('.//td/text()')[1].extract()
 
+    # the third row gives the population
+    population = trs[2].select('.//th/text()')[1].extract()
+    print population
+    population = re.search(r':([\d\s]+)', population).groups()[0]
+    population = int(population.replace(' ', ''))
+
     scraped_data = {
-        'code': dep+icom,
+        'insee_code': dep+icom,
         'year': year,
         'name': name,
-        'is_city': True
+        'zone_type': 'city',
+        'population': population,
     }
 
     scraped_data.update(parse_city_table_1(table1))
@@ -46,15 +53,14 @@ def parse_city_table_1(table):
     icol_value_per_person = 1
     icol_name = 3
 
-    scraped_data = defaultdict(dict)
+    scraped_data = {}
 
     for tr in table.select('.//tr')[5:]:
         tds = tr.select('.//td/text()')
         if len(tds) < 5:
             continue
         # Don't forget to remove whitespace in ascii ?
-        str_value = convert_value(tds[icol_value].extract())
-        value = float(str_value) * 1000
+        value = convert_value(tds[icol_value].extract()) * 1000
         str_value_per_person = tds[icol_value_per_person].extract()
         value_per_person = convert_value(str_value_per_person)
         # Strip line and remove "dont" keyword.
@@ -64,12 +70,10 @@ def parse_city_table_1(table):
         node_type = 'accountline'
 
         targets = city_account.find_node(name=name, type=node_type)
-
         if targets:
             target = targets[0]
-            if value and value_per_person:
-                scraped_data[target]['value'] = value
-                scraped_data[target]['value_per_person'] = value_per_person
+            if value is not None and value_per_person is not None:
+                scraped_data[target] = value
         else:
             print "There is no node of name %s and type %s"%(name, node_type)
 
@@ -98,10 +102,8 @@ def parse_city_table_2(table):
     parse_tablepart(rows[irow_start_2:irow_start_2+nb_rows], attr_name, 4, scraped_data)
 
     parse_tablepart(rows[irow_start_3:irow_start_3+nb_rows_3], attr_name, 4, scraped_data)
-
     attr_name = 'value'
     parse_tablepart(rows[irow_start_3:irow_start_3+nb_rows_3], attr_name, 0, scraped_data)
-
 
     return scraped_data
 

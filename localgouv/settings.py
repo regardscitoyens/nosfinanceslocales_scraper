@@ -18,5 +18,6 @@ NEWSPIDER_MODULE = 'localgouv.spiders'
 
 AUTOTHROTTLE_ENABLED = True
 
+# Logging does weird things...
 #import scrapy
 #scrapy.log.start(logfile="logs/logs", loglevel=scrapy.log.DEBUG, logstdout=True)

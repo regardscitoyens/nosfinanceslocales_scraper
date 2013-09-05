@@ -6,12 +6,9 @@ import re
 from scrapy import log
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
-from scrapy.item import Item, Field
 
-from localgouv.account_parsing import parse_city_page_account
-
-class AccountData(Item):
-    data = Field()
+from ..account_parsing import parse_city_page_account
+from ..item import CityFinancialData
 
 class LocalGouvFinanceSpider(BaseSpider):
     """Basic spider which crawls all pages of finance of french towns.
@@ -25,13 +22,20 @@ class LocalGouvFinanceSpider(BaseSpider):
     name = "localgouv"
     allowed_domains = ["http://alize2.finances.gouv.fr"]
 
-    def __init__(self, insee_code_file="./data/insee_communes.txt", year=2012):
+    def __init__(self, insee_code_file="./data/france2013.txt", year=2012):
         """Load insee code of every commune in france and generate all the urls to
         crawl."""
+
+        # XXX: insee_communes file contains also "cantons", filter out these lines
+        # XXX: some departments are not crawled correctly: 75, 92, 93, 94 and maybe
+        # others. Fix this.
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
-        def uniformize_dep_code(dep_code):
-            return dep_code if len(dep_code) == 3 else "0%s"%dep_code
-        data['DEP'] = data['DEP'].apply(uniformize_dep_code)
+        mask = data['ACTUAL'].apply(lambda v: v in [1, 2, 3])
+        data = data[mask]
+        def uniformize_code(code):
+            return ("00%s"%code)[-3:]
+        data['DEP'] = data['DEP'].apply(uniformize_code)
+        data['COM'] = data['COM'].apply(uniformize_code)
         baseurl = "http://alize2.finances.gouv.fr/communes/eneuro/detail.php?icom=%(COM)s&dep=%(DEP)s&type=BPS&param=0&exercice=" + str(year)
         self.start_urls = [baseurl%row for __, row in data.iterrows()]
 
@@ -43,7 +47,7 @@ class LocalGouvFinanceSpider(BaseSpider):
             data = parse_city_page_account(icom, dep, year, response)
             # convert account object to an Item instance.
             # WHY DO I NEED TO DO THAT SCRAPY ????
-            item = AccountData(data=data)
+            item = CityFinancialData(data)
             return item
         except:
             data = {'code': icom+dep, 'year': year, 'is_city': True, 'url': response.url}

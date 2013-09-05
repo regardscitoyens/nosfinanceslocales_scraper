@@ -91,6 +91,10 @@ class Account(Network):
     def add_relationship(self, node, r_nodes, operator):
         raise NotImplementedError
 
+    def iterlines(self):
+        for k, v in self.nodes.iteritems():
+            if 'type' in v and v['type'] == 'accountline':
+                yield (k, v)
 
 def make_city_account():
     """Create city's account: note that there are little differences between fiscal
@@ -177,7 +181,8 @@ def make_city_account():
                                            u"Produits foncier bâti"])
     account.add_line('land_property_tax', name=[u"Taxe foncière sur les propriétés non bâties", u"Produits foncier non bâti"])
     account.add_line('compensation_2010', name=u"Compensation-Relais 2010")
-    account.add_line('business_tax', name=[u"Taxe professionnelle (hors bases écrêtées)",
+    account.add_line('business_tax', name=[u"Taxe professionnelle (hors produits écrêtés)",
+                                           u"Taxe professionnelle (hors bases écrêtées)",
                                            u"Produits taxe professionnelle"])
     account.add_line('additionnal_land_property_tax', name=u"Taxe additionnelle à la taxe foncière sur les propriétés non bâties")
     account.add_line('business_property_contribution', name=u'Cotisation foncière des entreprises')
