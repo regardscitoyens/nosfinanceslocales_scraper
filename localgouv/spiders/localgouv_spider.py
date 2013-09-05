@@ -32,10 +32,36 @@ class LocalGouvFinanceSpider(BaseSpider):
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
         mask = data['ACTUAL'].apply(lambda v: v in [1, 2, 3])
         data = data[mask]
+
+        # Uniformize dep code and commune code to be on a string of length 3.
         def uniformize_code(code):
             return ("00%s"%code)[-3:]
         data['DEP'] = data['DEP'].apply(uniformize_code)
         data['COM'] = data['COM'].apply(uniformize_code)
+
+        # Weird thing: department is not the same between insee data and gouverment's
+        # site for DOM.
+        # GUADELOUPE: 971 -> 101
+        # MARTINIQUE: 972 -> 103
+        # GUYANE:     973 -> 102
+        # REUNION:    974 -> 104
+        def convert_dep(code):
+            return {
+                '971': '101',
+                '972': '103',
+                '973': '102',
+                '974': '104',
+            }.get(code, code)
+        data['DEP'] = data['DEP'].apply(convert_dep)
+        # Finally, DOM cities have an insee_code on 2 digits in the insee file. We need
+        # to add a third digit before these two to crawl the right page.
+        def convert_city(row):
+            if row['DEP'] in ['101', '102', '103', '104']:
+                return row['DEP'][-1] + row['COM'][1:]
+            else:
+                return row['COM']
+        data['COM'] = data.apply(convert_city, axis=1)
+
         baseurl = "http://alize2.finances.gouv.fr/communes/eneuro/detail.php?icom=%(COM)s&dep=%(DEP)s&type=BPS&param=0&exercice=" + str(year)
         self.start_urls = [baseurl%row for __, row in data.iterrows()]
 
