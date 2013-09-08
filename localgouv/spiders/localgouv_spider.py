@@ -7,8 +7,8 @@ from scrapy import log
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 
-from ..account_parsing import CityParser
-from ..item import CityFinancialData
+from ..account_parsing import CityParser, EPCIParser
+from ..item import CityFinancialData, EPCIFinancialData
 
 class LocalGouvFinanceSpider(BaseSpider):
     """Basic spider which crawls all pages of finance of french towns, departments
@@ -18,15 +18,15 @@ class LocalGouvFinanceSpider(BaseSpider):
     domain = "http://alize2.finances.gouv.fr"
     allowed_domains = [domain]
 
-    def __init__(self, year=2012, com=True, depreg=False, epci=False):
+    def __init__(self, year=2012, zone_type='city'):
         """Load insee code of every commune in france and generate all the urls to
         crawl."""
         self.start_urls = []
-        if com:
+        if zone_type == 'city' or zone_type == 'all':
             self.start_urls += self.get_commune_urls(year)
-        if depreg:
+        if zone_type == 'depreg' or zone_type == 'all':
             self.start_urls += self.get_depreg_urls(year)
-        if epci:
+        if zone_type == 'epci' or zone_type == 'all':
             self.start_urls += self.get_epci_urls(year)
 
     def get_dep_and_region_urls(self, year):
@@ -38,8 +38,8 @@ class LocalGouvFinanceSpider(BaseSpider):
     def get_epci_urls(self, year):
         xls = pd.ExcelFile('./data/epci-au-01-01-2013.xls')
         data = xls.parse('Composition communale des EPCI')
-        data['siren'] = df[u'Établissement public à fiscalité propre'][1:]
-        data['dep'] = df[u'Département commune'].apply(lambda r: ('0%s'%r)[:3])
+        data['siren'] = data[u'Établissement public à fiscalité propre'][1:]
+        data['dep'] = data[u'Département commune'].apply(lambda r: ('0%s'%r)[:3])
         baseurl = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s"%(self.domain, str(year))
         return [baseurl%row for __, row in data.iterrows()][1:]
 
@@ -101,32 +101,31 @@ class LocalGouvFinanceSpider(BaseSpider):
         return [baseurl%row for __, row in data.iterrows()]
 
     def parse(self, response):
-        if "/communes/eneuro/detail_gf.php" in response.url:
+        if "/communes/eneuro/detail_gfp.php" in response.url:
             return self.parse_epci(response)
         elif "/communes/eneuro/detail.php" in response.url:
             return self.parse_commune(response)
         elif "/departements/detail.php" in response.url or \
-                "/regions/detail.php" in reponse.url:
+                "/regions/detail.php" in response.url:
             self.parse_dep_and_reg(response)
 
     def parse_commune(self, response):
         """Parse the response and return an Account object"""
         hxs = HtmlXPathSelector(response)
         icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})', response.url).groups()
-        try:
-            parser = CityParser(icom+dep, year)
-            data = parser.parse(response)
-            # convert account object to an Item instance.
-            # WHY DO I NEED TO DO THAT SCRAPY ????
-            item = CityFinancialData(data)
-            return item
-        except:
-            data = {'code': icom+dep, 'year': year, 'is_city': True, 'url': response.url}
-            log.msg('failed url %s'%response.url, level=log.ERROR)
-            raise
+        parser = CityParser(icom+dep, year)
+        data = parser.parse(response)
+        # convert account object to an Item instance.
+        # WHY DO I NEED TO DO THAT SCRAPY ????
+        item = CityFinancialData(data)
+        return item
 
     def parse_epci(self, response):
-        hxs = HtmlXPathSelector(response)
+        siren, year = re.search('siren=(\d+)&dep=\w{3}&type=BPS&exercice=(\d{4})', response.url).groups()
+        parser = EPCIParser(siren, year)
+        data = parser.parse(response)
+        item = EPCIFinancialData(data)
+        return item
 
     def parse_dep_and_reg(self, response):
         hxs = HtmlXPathSelector(response)
