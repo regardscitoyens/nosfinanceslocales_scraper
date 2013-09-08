@@ -39,6 +39,7 @@ class LocalGouvFinanceSpider(BaseSpider):
         xls = pd.ExcelFile('./data/epci-au-01-01-2013.xls')
         data = xls.parse('Composition communale des EPCI')
         data['siren'] = data[u'Établissement public à fiscalité propre'][1:]
+        data = data.groupby('siren', as_index=False).first()
         data['dep'] = data[u'Département commune'].apply(lambda r: ('0%s'%r)[:3])
         baseurl = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s"%(self.domain, str(year))
         return [baseurl%row for __, row in data.iterrows()][1:]
