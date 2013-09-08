@@ -207,3 +207,14 @@ def make_city_account():
     return account
 
 city_account = make_city_account()
+
+def make_epci_account():
+    account = make_city_account()
+    account.add_line('tax_refund', name=u'Reversement de fiscalité')
+    account.add_edge('operating_revenues', 'tax_refund')
+    account.nodes['business_property_contribution']['name'] = u'Cotisation foncière des entreprises ('
+    account.nodes['business_profit_contribution']['name'] = u'Cotisation sur la valeur ajoutée des entreprises (tous régimes fiscaux confondus)'
+    return account
+
+epci_account = make_epci_account()
+

@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from scrapy.selector import HtmlXPathSelector
 
-from .account_network import city_account
+from .account_network import city_account, epci_account
 
 
 def convert_value(val):
@@ -41,6 +41,10 @@ class CityParser(object):
         self.tax_values_icol = [0, 4]
         self.tax_name_icol = 3
 
+    def has_taxes(self):
+        # For years > 2008, we have also tax data
+        return int(self.data['year']) > 2008
+
     def parse(self, response):
         """Parse html account table of a city for a given year
         crawled from http://alize2.finances.gouv.fr.
@@ -54,7 +58,7 @@ class CityParser(object):
         data.update(self.finance(hxs))
 
         # For years > 2008, we have also tax data
-        if int(data['year']) > 2008:
+        if self.has_taxes():
             data.update(self.taxes(hxs))
 
         return data
@@ -116,14 +120,14 @@ class CityParser(object):
     def parse_one_tax_info(self, hxs, info_name, icol_value, start_row, end_row, is_percent=False):
         data = defaultdict(dict)
         for row in self.table2(hxs).select('.//tr')[start_row:end_row]:
-            tds = row.select('.//td/text()')
-            if len(tds) < max(icol_value, self.tax_name_icol):
+            tds = row.select('.//td')
+            if len(tds) <= max(icol_value, self.tax_name_icol):
                 continue
-            name = tds[self.tax_name_icol].extract().strip()
+            name = tds[self.tax_name_icol].select('./text()').extract()[0].strip()
             targets = self.account.find_node(name=name, type='accountline')
             if targets:
                 target = targets[0]
-                str_val = tds[icol_value].extract()
+                str_val = tds[icol_value].select('./text()').extract()[0].strip()
                 val = convert_value(str_val)
                 if not is_percent:
                     val = val * 1000 if val else None
@@ -131,22 +135,59 @@ class CityParser(object):
         return data
 
     def basis_taxes(self, hxs):
-        return self.parse_one_tax_info(hxs, 'basis', 0, 4, 9)
+        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 8)
 
     def tax_cuts_on_deliberation(self, hxs):
-        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', 4, 4, 9)
+        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 8)
 
     def tax_revenues(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', 0, 10, 15)
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 10, 15)
 
     def tax_rates(self, hxs):
-        return self.parse_one_tax_info(hxs, 'rate', 4, 10, 15, is_percent=True)
+        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 10, 15, is_percent=True)
 
     def repartition_taxes(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', 0, 18, 21)
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 18, 21)
 
-class EPCIParser(object):
+class EPCIParser(CityParser):
     zone_type = 'epci'
+    account = epci_account
+    def __init__(self, siren, year):
+        self.data = {'siren':siren,
+                     'year': year,
+                     'zone_type': self.zone_type}
 
+        # In the table with financial data, the values we want to scrap are in 
+        # the first columns, the name of the data is in the third column.
+        self.finance_value_icol = 0
+        self.finance_name_icol = 2
+
+        # In the table with tax data, the values can be in the first column and
+        # the fourth. The name of the data in third column.
+        self.tax_values_icol = [0, 3]
+        self.tax_name_icol = 2
+
+    def has_taxes(self):
+        return True
+
+    def population(self, hxs):
+        pop = self.table1(hxs).select('.//tr[position()=2]').re(r': ([\d\s]+) habitants')[0]
+        return int(pop.replace(' ', ''))
+
+
+    def basis_taxes(self, hxs):
+        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 11)
+
+    def tax_cuts_on_deliberation(self, hxs):
+        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 11)
+
+    def tax_revenues(self, hxs):
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 13, 20)
+
+    def tax_rates(self, hxs):
+        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 13, 20, is_percent=True)
+
+    def repartition_taxes(self, hxs):
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 22, 25)
 
 
