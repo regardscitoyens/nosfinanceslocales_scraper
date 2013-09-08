@@ -1,8 +1,9 @@
 Localgouv
 =========
 
-This project aims at scrapping financial data of all towns (="communes") from
-the website http://www.collectivites-locales.gouv.fr/.
+This project aims at scrapping financial data of towns (="communes"), EPCI
+(group of cities), department and regions from the website
+http://www.collectivites-locales.gouv.fr/.
 
 We used scrapy lib to crawl the page and xpaths stuff to scrap data.
 
@@ -13,7 +14,7 @@ notebooks. [Here is one which shows some crawled data on 2012.](http://nbviewer.
 Usage
 =====
 
-For example, to scrap data of every towns on the fiscal year 2012, run in the root
+To scrap data of every cities on the fiscal year 2012, run in the root
 dir:
 `scrapy crawl localgouv -o scraped_data_dir/localgouv_2012.json -t json -a year=2012`
 
@@ -29,8 +30,11 @@ Requirements
 
 TODO
 ====
-
- * doc
- * get simple stats on scraped data to check its quality
+ * Crawl department and region pages.
+ * Add some docs, especially indicate the mapping between variable names and
+   fields in html pages.
+ * Get simple stats on scraped data to check its quality (partly made for
+   cities).
+ * Add some tests on different fiscal years.
 
 
