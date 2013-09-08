@@ -20,7 +20,7 @@ To scrap data of every cities on the fiscal year 2012, run in the root
 dir:
 `scrapy crawl localgouv -o scraped_data_dir/localgouv_2012.json -t json -a year=2012`
 
-To crawl EPCI, add an optionnal paramter `-a zone_type='epci'`.
+To crawl EPCI, add an optionnal parameter `-a zone_type='epci'`.
 
 Scraped data samples are available in scraped_data directory:
  * [epci_2012.sample.json](scraped_data/epci_2012.sample.json)
