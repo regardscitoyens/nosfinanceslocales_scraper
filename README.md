@@ -1,14 +1,16 @@
 Localgouv
 =========
 
-This project aims at scrapping financial data of towns (="communes"), EPCI
-(group of cities), department and regions from the website
+This project aims at scrapping financial data of cities (="communes"), EPCI
+(group of cities Cf. [wikipedia](http://fr.wikipedia.org/wiki/%C3%89tablissement_public_de_coop%C3%A9ration_intercommunale)), department and regions from the website
 http://www.collectivites-locales.gouv.fr/.
 
 We used scrapy lib to crawl the page and xpaths stuff to scrap data.
 
 To check the quality of the crawling and to analyze data, we use ipython
-notebooks. [Here is one which shows some crawled data on 2012.](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/localgouvdata_analysis.ipynb)
+notebooks:
+ * analysis of data from cities in 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/localgouvdata_analysis.ipynb)
+ * analysis of data from epci in 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/epcidata_analysis.ipynb)
 
 
 Usage
@@ -18,9 +20,10 @@ To scrap data of every cities on the fiscal year 2012, run in the root
 dir:
 `scrapy crawl localgouv -o scraped_data_dir/localgouv_2012.json -t json -a year=2012`
 
+To crawl EPCI, add an optionnal paramter `-a zone_type='epci'`.
+
 Scraped data samples are available in scraped_data directory:
- * [localgouv_2000.sample.json](scraped_data/localgouv_2000.sample.json)
- * [localgouv_2012.sample.json](scraped_data/localgouv_2012.sample.json)
+ * [epci_2012.sample.json](scraped_data/epci_2012.sample.json)
 
 
 Requirements
