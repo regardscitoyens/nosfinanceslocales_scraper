@@ -10,10 +10,10 @@ from scrapy.selector import HtmlXPathSelector
 from scrapy.http.response.html import HtmlResponse
 
 from localgouv.account_network import city_account
-from localgouv.account_parsing import parse_city_page_account
+from localgouv.account_parsing import CityParser
 
 
-def get_reponse(filepath):
+def get_response(filepath):
     body = open(filepath, 'r').read()
     response = HtmlResponse('test', encoding='utf-8')
     response.body = body
@@ -24,16 +24,18 @@ class CommuneFinanceParsingTestCase(unittest2.TestCase):
         self.response = get_response('data/commune_2012_account.html')
 
     def test_parsing(self):
-        data = parse_city_page_account("", "", "2012", self.response)
+        parser = CityParser('', 2012)
+        data = parser.parse(self.response)
+        self.assertEqual(data['population'], 394)
         # test data parsed from first table
         self.assertEqual(data['operating_revenues'], 210000.)
-        self.assertEqual(data['localtax'], 289.)
-        self.assertEqual(data['operating_costs'], 542.)
+        self.assertEqual(data['localtax'], 114000.)
+        self.assertEqual(data['operating_costs'], 214000.)
 
         # test data parsed from second table
         self.assertEqual(data['home_tax']['value'], 47000.)
         self.assertEqual(data['home_tax']['basis'], 562000.)
-        self.assertEqual(data['home_tax']['voted_rate'], 0.0839)
+        self.assertEqual(data['home_tax']['rate'], 0.0839)
 
 if __name__ == '__main__':
     unittest2.main()

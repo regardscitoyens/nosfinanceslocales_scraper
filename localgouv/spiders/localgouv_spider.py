@@ -7,18 +7,13 @@ from scrapy import log
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 
-from ..account_parsing import parse_city_page_account
+from ..account_parsing import CityParser
 from ..item import CityFinancialData
 
 class LocalGouvFinanceSpider(BaseSpider):
-    """Basic spider which crawls all pages of finance of french towns.
-    The pages' urls depends on 5 parameters:
-        - COM: the insee code of the commune
-        - DEP: the department code on 3 character
-        - type: type of financial stuff, BPS is for the whole data.
-        - param: ?
-        - exercise: year of financial data
-        """
+    """Basic spider which crawls all pages of finance of french towns, departments
+    regions and EPCI.
+    """
     name = "localgouv"
     domain = "http://alize2.finances.gouv.fr"
     allowed_domains = [domain]
@@ -49,6 +44,15 @@ class LocalGouvFinanceSpider(BaseSpider):
         return [baseurl%row for __, row in data.iterrows()][1:]
 
     def get_commune_urls(self, year):
+        """
+        The communes pages urls depends on 5 parameters:
+        - COM: the insee code of the commune
+        - DEP: the department code on 3 characters
+        - type: type of financial data, BPS is for the whole data.
+        - param: ?
+        - exercise: year of financial data
+        """
+
         insee_code_file="./data/france2013.txt"
         # XXX: insee_communes file contains also "cantons", filter out these lines
         # XXX: some departments are not crawled correctly: 75, 92, 93, 94 and maybe
@@ -77,6 +81,7 @@ class LocalGouvFinanceSpider(BaseSpider):
                 '974': '104',
             }.get(code, code)
         data['DEP'] = data['DEP'].apply(convert_dep)
+
         # Another strange thing, DOM cities have an insee_code on 2 digits in the
         # insee file. We need to add a third digit before these two to crawl the
         # right page. This third digit is find according to this mapping:
@@ -109,7 +114,8 @@ class LocalGouvFinanceSpider(BaseSpider):
         hxs = HtmlXPathSelector(response)
         icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})', response.url).groups()
         try:
-            data = parse_city_page_account(icom, dep, year, response)
+            parser = CityParser(icom+dep, year)
+            data = parser.parse(response)
             # convert account object to an Item instance.
             # WHY DO I NEED TO DO THAT SCRAPY ????
             item = CityFinancialData(data)

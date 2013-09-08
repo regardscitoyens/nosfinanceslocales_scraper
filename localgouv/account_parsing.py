@@ -1,137 +1,13 @@
 # -*- coding: utf-8 -*-
-import re
 from collections import defaultdict
 
 from scrapy.selector import HtmlXPathSelector
 
 from .account_network import city_account
 
-def parse_city_page_account(icom, dep, year, response):
-    """Parse html account table of a city for a given year
-    crawled from http://alize2.finances.gouv.fr.
-    Return an account instance which gathers all parsed data."""
-
-    hxs = HtmlXPathSelector(response)
-
-    # select tables of interest
-    table1 = hxs.select('.//table')[2]
-
-    # In the first table, the second row gives the name of the city
-    trs = table1.select('.//tr')
-    name = trs[1].select('.//td/text()')[1].extract()
-
-    # the third row gives the population
-    population = trs[2].select('.//th/text()')[1].extract()
-    print population
-    population = re.search(r':([\d\s]+)', population).groups()[0]
-    population = int(population.replace(' ', ''))
-
-    scraped_data = {
-        'insee_code': dep+icom,
-        'year': year,
-        'name': name,
-        'zone_type': 'city',
-        'population': population,
-    }
-
-    scraped_data.update(parse_city_table_1(table1))
-
-    # For years > 2008, we have two tables with data
-    if int(year) > 2008:
-        table2 = hxs.select('.//table')[5]
-        scraped_data.update(parse_city_table_2(table2))
-
-    return scraped_data
-
-def parse_city_table_1(table):
-    # For this table, we have:
-    # - the value is always in the first column of the table. If there is no value,
-    # this is just section of the account of the city.
-    # - the name of the row is defined the third column.
-
-    icol_value = 0
-    icol_value_per_person = 1
-    icol_name = 3
-
-    scraped_data = {}
-
-    for tr in table.select('.//tr')[5:]:
-        tds = tr.select('.//td/text()')
-        if len(tds) < 5:
-            continue
-        # Don't forget to remove whitespace in ascii ?
-        value = convert_value(tds[icol_value].extract()) * 1000
-        str_value_per_person = tds[icol_value_per_person].extract()
-        value_per_person = convert_value(str_value_per_person)
-        # Strip line and remove "dont" keyword.
-        name = tds[icol_name].extract().replace('dont :', '').strip()
-
-        # We are only interested in accountline
-        node_type = 'accountline'
-
-        targets = city_account.find_node(name=name, type=node_type)
-        if targets:
-            target = targets[0]
-            if value is not None and value_per_person is not None:
-                scraped_data[target] = value
-        else:
-            print "There is no node of name %s and type %s"%(name, node_type)
-
-    return scraped_data
-
-def parse_city_table_2(table):
-    # This table contains info about taxes. The format of the table is very annoying.
-    # => all the code written here is very specific to this format and will crash as
-    # soon as a slight change of the html will occur.
-    # XXX: This parsing is just a horrible shit
-    # TODO: erase this fucking crappy code, make this parsing acceptable.
-    scraped_data = defaultdict(dict)
-    irow_start_1 = 4
-    irow_start_2 = 10
-    irow_start_3 = 17
-    nb_rows = 5
-    nb_rows_3 = 3
-    rows = table.select('.//tr')
-    attr_name = 'basis'
-    parse_tablepart(rows[irow_start_1:irow_start_1+nb_rows], attr_name, 0, scraped_data)
-    attr_name = 'cuts_on_deliberation'
-    parse_tablepart(rows[irow_start_1:irow_start_1+nb_rows], attr_name, 4, scraped_data)
-    attr_name = 'value'
-    parse_tablepart(rows[irow_start_2:irow_start_2+nb_rows], attr_name, 0, scraped_data)
-    attr_name = 'voted_rate'
-    parse_tablepart(rows[irow_start_2:irow_start_2+nb_rows], attr_name, 4, scraped_data)
-
-    parse_tablepart(rows[irow_start_3:irow_start_3+nb_rows_3], attr_name, 4, scraped_data)
-    attr_name = 'value'
-    parse_tablepart(rows[irow_start_3:irow_start_3+nb_rows_3], attr_name, 0, scraped_data)
-
-    return scraped_data
-
-def parse_tablepart(rows, attr_name, icol, scraped_data):
-    # Attempt to factorize some code... but failed to reach an acceptable code.
-    # XXX: erase all this crap.
-    icol_name = 3
-    for row in rows:
-        tds = row.select('.//td/text()')
-        if len(tds) < 6:
-            continue
-        name = tds[icol_name].extract().strip()
-        targets = city_account.find_node(name=name, type='accountline')
-        if targets:
-            target = targets[0]
-            str_val = tds[icol].extract()
-            val = convert_value(str_val)
-            if attr_name <> 'voted_rate':
-                val = val * 1000 if val else None
-
-            scraped_data[target][attr_name] = val
-
-            if icol <> 0 and len(tds) == 7:
-                scraped_data[target][attr_name] = convert_value(tds[icol+1].extract())
-
-    return scraped_data
 
 def convert_value(val):
+    """Remove crap from val string and then convert it into float"""
     val = val.replace(u'\xa0', '')\
              .replace(',', '.')\
              .replace('-', '')\
@@ -143,6 +19,134 @@ def convert_value(val):
         return float(val)
     else:
         return None
+
+
+
+class CityParser(object):
+    """Parser of city html page"""
+    zone_type = 'city'
+    account = city_account
+    def __init__(self, insee_code, year):
+        self.data = {'insee_code':insee_code,
+                     'year': year,
+                     'zone_type': self.zone_type}
+
+        # In the table with financial data, the values we want to scrap are in 
+        # the first columns, the name of the data is in the third column.
+        self.finance_value_icol = 0
+        self.finance_name_icol = 3
+
+        # In the table with tax data, the values can be in the first column and
+        # the fourth. The name of the data in third column.
+        self.tax_values_icol = [0, 4]
+        self.tax_name_icol = 3
+
+    def parse(self, response):
+        """Parse html account table of a city for a given year
+        crawled from http://alize2.finances.gouv.fr.
+        Return a dictionnary which contains scraped data"""
+        hxs = HtmlXPathSelector(response)
+
+        data = self.data.copy()
+        data['population'] = self.population(hxs)
+        data['name'] = self.name(hxs)
+
+        data.update(self.finance(hxs))
+
+        # For years > 2008, we have also tax data
+        if int(data['year']) > 2008:
+            data.update(self.taxes(hxs))
+
+        return data
+
+    def name(self, hxs):
+        return self.table1(hxs).select('.//tr[position()=2]/td[position()=2]/text()').extract()[0]
+
+    def population(self, hxs):
+        pop = self.table1(hxs).select('.//tr[position()=3]').re(r': ([\d\s]+) habitants')[0]
+        return int(pop.replace(' ', ''))
+
+    def table1(self, hxs):
+        """Select table where we have name, population, and finance data"""
+        return hxs.select('//body/table[position()=3]')
+
+    def table2(self, hxs):
+        """Select table where we have tax data"""
+        return hxs.select('//body/table[position()=4]')
+
+    def finance(self, hxs):
+        # For this table, we have:
+        # - the value is always in the first column of the table. If there is no value,
+        # this is just section of the account of the city.
+        # - the name of the row is defined the third column.
+
+        data = {}
+
+        for tr in self.table1(hxs).select('.//tr')[4:]:
+            tds = tr.select('.//td/text()')
+            if len(tds) <= self.finance_name_icol:
+                continue
+            name = tds[self.finance_name_icol].extract()
+            name = name.replace('dont :', '').strip()
+            targets = self.account.find_node(name=name, type='accountline')
+            if targets:
+                target = targets[0]
+                value = convert_value(tds[self.finance_value_icol].extract()) * 1000
+                if value is not None:
+                    data[target] = value
+            else:
+                print "There is no node of name %s "%name
+
+        return data
+
+    def taxes(self, hxs):
+        data = self.basis_taxes(hxs)
+        def update_data(new_data):
+            for k, v in new_data.items():
+                if type(v) == dict:
+                    data[k].update(v)
+                else:
+                    data[k] = v
+        update_data(self.tax_cuts_on_deliberation(hxs))
+        update_data(self.tax_revenues(hxs))
+        update_data(self.tax_rates(hxs))
+        update_data(self.repartition_taxes(hxs))
+        return data
+
+    def parse_one_tax_info(self, hxs, info_name, icol_value, start_row, end_row, is_percent=False):
+        data = defaultdict(dict)
+        for row in self.table2(hxs).select('.//tr')[start_row:end_row]:
+            tds = row.select('.//td/text()')
+            if len(tds) < max(icol_value, self.tax_name_icol):
+                continue
+            name = tds[self.tax_name_icol].extract().strip()
+            targets = self.account.find_node(name=name, type='accountline')
+            if targets:
+                target = targets[0]
+                str_val = tds[icol_value].extract()
+                val = convert_value(str_val)
+                if not is_percent:
+                    val = val * 1000 if val else None
+                data[target][info_name] = val
+        return data
+
+    def basis_taxes(self, hxs):
+        return self.parse_one_tax_info(hxs, 'basis', 0, 4, 9)
+
+    def tax_cuts_on_deliberation(self, hxs):
+        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', 4, 4, 9)
+
+    def tax_revenues(self, hxs):
+        return self.parse_one_tax_info(hxs, 'value', 0, 10, 15)
+
+    def tax_rates(self, hxs):
+        return self.parse_one_tax_info(hxs, 'rate', 4, 10, 15, is_percent=True)
+
+    def repartition_taxes(self, hxs):
+        return self.parse_one_tax_info(hxs, 'value', 0, 18, 21)
+
+class EPCIParser(object):
+    zone_type = 'epci'
 
 
 
