@@ -208,6 +208,10 @@ class DepartmentParser(CityParser):
     tax_values_icol = [0, 4]
     tax_name_icol = 3
 
+    def name(self, hxs):
+        xpath =  '//body/table[position()=3]/tr[position()=1]/td/span/text()'
+        return hxs.select(xpath).extract()[0].split('SITUATION FINANCIERE du DEPARTEMENT de')[1].strip()
+
     def population(self, hxs):
         xpath =  '//body/table[position()=4]/tr[position()=1]/td/text()'
         pop = hxs.select(xpath).re(r': ([\d\s]+)\xa0')[0]

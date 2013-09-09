@@ -1,7 +1,7 @@
 from scrapy.item import Item, Field
-from .account_network import city_account, epci_account
+from .account_network import city_account, epci_account, department_account
 
-# XXX: S...crapy stuff. I would prefer to return dictionnary.
+# XXX: S...crapy stuff. I would prefer to return a dictionnary.
 
 class FinancialData(Item):
     population = Field()
@@ -19,4 +19,8 @@ class EPCIFinancialData(FinancialData):
 for line_name, _ in epci_account.iterlines():
     EPCIFinancialData.fields[line_name] = {}
 
+class DepartmentFinancialData(FinancialData):
+    insee_code = Field()
+for line_name, _ in department_account.iterlines():
+    DepartmentFinancialData.fields[line_name] = {}
 

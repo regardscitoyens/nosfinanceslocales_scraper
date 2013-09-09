@@ -7,8 +7,8 @@ from scrapy import log
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 
-from ..account_parsing import CityParser, EPCIParser
-from ..item import CityFinancialData, EPCIFinancialData
+from ..account_parsing import CityParser, EPCIParser, DepartmentParser
+from ..item import CityFinancialData, EPCIFinancialData, DepartmentFinancialData
 
 class LocalGouvFinanceSpider(BaseSpider):
     """Basic spider which crawls all pages of finance of french towns, departments
@@ -24,18 +24,28 @@ class LocalGouvFinanceSpider(BaseSpider):
         self.start_urls = []
         if zone_type == 'city' or zone_type == 'all':
             self.start_urls += self.get_commune_urls(year)
-        if zone_type == 'depreg' or zone_type == 'all':
-            self.start_urls += self.get_depreg_urls(year)
+        if zone_type == 'dep' or zone_type == 'all':
+            self.start_urls += self.get_dep_urls(year)
+        if zone_type == 'reg' or zone_type == 'all':
+            self.start_urls += self.get_reg_urls(year)
         if zone_type == 'epci' or zone_type == 'all':
             self.start_urls += self.get_epci_urls(year)
 
-    def get_dep_and_region_urls(self, year):
-        #TODO
-        dep_baseurl = "%s/departements/detail.php?dep=%%(dep)s&exercice=%s"%(self.domain, year)
+    def get_dep_urls(self, year):
+        insee_code_file = "./data/depts2013.txt"
+        data = pd.io.parsers.read_csv(insee_code_file, '\t')
+        data['DEP'] = uniformize_code(data, 'DEP')
+        data['DEP'] = convert_dom_code(data)
+        baseurl = "%s/departements/detail.php?dep=%%(DEP)s&exercice=%s"%(self.domain, year)
+        return [baseurl%row for __, row in data.iterrows()]
+
+    def get_reg_urls(self, year):
         reg_baseurl = "%s/regions/detail.php?reg=%%(reg)s&exercice=%s"%(self.domain, year)
         return []
 
     def get_epci_urls(self, year):
+        """Build url to crawl from insee file provided here
+        http://www.insee.fr/fr/methodes/default.asp?page=zonages/intercommunalite.htm"""
         xls = pd.ExcelFile('./data/epci-au-01-01-2013.xls')
         data = xls.parse('Composition communale des EPCI')
         data['siren'] = data[u'Établissement public à fiscalité propre'][1:]
@@ -55,33 +65,17 @@ class LocalGouvFinanceSpider(BaseSpider):
         """
 
         insee_code_file="./data/france2013.txt"
+        data = pd.io.parsers.read_csv(insee_code_file, '\t')
         # XXX: insee_communes file contains also "cantons", filter out these lines
         # XXX: some departments are not crawled correctly: 75, 92, 93, 94 and maybe
         # others. Fix this.
-        data = pd.io.parsers.read_csv(insee_code_file, '\t')
         mask = data['ACTUAL'].apply(lambda v: v in [1, 2, 3])
         data = data[mask]
 
-        # Uniformize dep code and commune code to be on a string of length 3.
-        def uniformize_code(code):
-            return ("00%s"%code)[-3:]
-        data['DEP'] = data['DEP'].apply(uniformize_code)
-        data['COM'] = data['COM'].apply(uniformize_code)
+        data['DEP'] = uniformize_code(data, 'DEP')
+        data['COM'] = uniformize_code(data, 'COM')
 
-        # Weird thing: department is not the same between insee data and gouverment's
-        # site for DOM.
-        # GUADELOUPE: 971 -> 101
-        # MARTINIQUE: 972 -> 103
-        # GUYANE:     973 -> 102
-        # REUNION:    974 -> 104
-        def convert_dep(code):
-            return {
-                '971': '101',
-                '972': '103',
-                '973': '102',
-                '974': '104',
-            }.get(code, code)
-        data['DEP'] = data['DEP'].apply(convert_dep)
+        data['DEP'] = convert_dom_code(data)
 
         # Another strange thing, DOM cities have an insee_code on 2 digits in the
         # insee file. We need to add a third digit before these two to crawl the
@@ -106,9 +100,10 @@ class LocalGouvFinanceSpider(BaseSpider):
             return self.parse_epci(response)
         elif "/communes/eneuro/detail.php" in response.url:
             return self.parse_commune(response)
-        elif "/departements/detail.php" in response.url or \
-                "/regions/detail.php" in response.url:
-            self.parse_dep_and_reg(response)
+        elif "/departements/detail.php" in response.url:
+            return self.parse_dep(response)
+        elif "/regions/detail.php" in response.url:
+            return self.parse_reg(response)
 
     def parse_commune(self, response):
         """Parse the response and return an Account object"""
@@ -128,7 +123,34 @@ class LocalGouvFinanceSpider(BaseSpider):
         item = EPCIFinancialData(data)
         return item
 
-    def parse_dep_and_reg(self, response):
-        hxs = HtmlXPathSelector(response)
+    def parse_dep(self, response):
+        dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
+        parser = DepartmentParser(dep, year)
+        data = parser.parse(response)
+        item = DepartmentFinancialData(data)
+        return item
 
+    def parse_reg(self, response):
+        raise NotImplementedError
 
+def uniformize_code(df, column):
+    # Uniformize dep code and commune code to be on a string of length 3.
+    def _uniformize_code(code):
+        return ("00%s"%code)[-3:]
+    return df[column].apply(_uniformize_code)
+
+def convert_dom_code(df, column='DEP'):
+    # Weird thing: department is not the same between insee data and gouverment's
+    # site for DOM.
+    # GUADELOUPE: 971 -> 101
+    # MARTINIQUE: 972 -> 103
+    # GUYANE:     973 -> 102
+    # REUNION:    974 -> 104
+    def convert_dep(code):
+        return {
+            '971': '101',
+            '972': '103',
+            '973': '102',
+            '974': '104',
+        }.get(code, code)
+    return df[column].apply(convert_dep)
