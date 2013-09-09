@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from scrapy.selector import HtmlXPathSelector
 
-from .account_network import city_account, epci_account
+from .account_network import city_account, epci_account, department_account
 
 
 def convert_value(val):
@@ -26,20 +26,23 @@ class CityParser(object):
     """Parser of city html page"""
     zone_type = 'city'
     account = city_account
+
+    table1_ix = 3
+    table2_ix = 4
+
+    # In the table with financial data, the values we want to scrap are in 
+    # the first columns, the name of the data is in the third column.
+    finance_value_icol = 0
+    finance_name_icol = 3
+
+    # In the table with tax data, the values can be in the first column and
+    # the fourth. The name of the data in third column.
+    tax_values_icol = [0, 4]
+    tax_name_icol = 3
     def __init__(self, insee_code, year):
         self.data = {'insee_code':insee_code,
                      'year': year,
                      'zone_type': self.zone_type}
-
-        # In the table with financial data, the values we want to scrap are in 
-        # the first columns, the name of the data is in the third column.
-        self.finance_value_icol = 0
-        self.finance_name_icol = 3
-
-        # In the table with tax data, the values can be in the first column and
-        # the fourth. The name of the data in third column.
-        self.tax_values_icol = [0, 4]
-        self.tax_name_icol = 3
 
     def has_taxes(self):
         # For years > 2008, we have also tax data
@@ -72,11 +75,11 @@ class CityParser(object):
 
     def table1(self, hxs):
         """Select table where we have name, population, and finance data"""
-        return hxs.select('//body/table[position()=3]')
+        return hxs.select('//body/table[position()=%s]'%self.table1_ix)
 
     def table2(self, hxs):
         """Select table where we have tax data"""
-        return hxs.select('//body/table[position()=4]')
+        return hxs.select('//body/table[position()=%s]'%self.table2_ix)
 
     def finance(self, hxs):
         # For this table, we have:
@@ -86,16 +89,20 @@ class CityParser(object):
 
         data = {}
 
-        for tr in self.table1(hxs).select('.//tr')[4:]:
-            tds = tr.select('.//td/text()')
+        for tr in self.table1(hxs).select('.//tr')[2:]:
+            tds = tr.select('.//td')
             if len(tds) <= self.finance_name_icol:
                 continue
-            name = tds[self.finance_name_icol].extract()
-            name = name.replace('dont :', '').strip()
+            name_td = tds[self.finance_name_icol].select('.//text()').extract()
+            if not name_td or not name_td[0].strip():
+                continue
+            name = name_td[0]
+            name = name.replace('dont', '').replace(':', '').replace('+', '').strip()
             targets = self.account.find_node(name=name, type='accountline')
             if targets:
                 target = targets[0]
-                value = convert_value(tds[self.finance_value_icol].extract()) * 1000
+                value = convert_value(tds[self.finance_value_icol]\
+                    .select('.//text()').extract()[0]) * 1000
                 if value is not None:
                     data[target] = value
             else:
@@ -152,20 +159,20 @@ class CityParser(object):
 class EPCIParser(CityParser):
     zone_type = 'epci'
     account = epci_account
+
+    # In the table with financial data, the values we want to scrap are in 
+    # the first columns, the name of the data is in the third column.
+    finance_value_icol = 0
+    finance_name_icol = 2
+
+    # In the table with tax data, the values can be in the first column and
+    # the fourth. The name of the data in third column.
+    tax_values_icol = [0, 3]
+    tax_name_icol = 2
     def __init__(self, siren, year):
         self.data = {'siren':siren,
                      'year': year,
                      'zone_type': self.zone_type}
-
-        # In the table with financial data, the values we want to scrap are in 
-        # the first columns, the name of the data is in the third column.
-        self.finance_value_icol = 0
-        self.finance_name_icol = 2
-
-        # In the table with tax data, the values can be in the first column and
-        # the fourth. The name of the data in third column.
-        self.tax_values_icol = [0, 3]
-        self.tax_name_icol = 2
 
     def has_taxes(self):
         return True
@@ -189,5 +196,39 @@ class EPCIParser(CityParser):
 
     def repartition_taxes(self, hxs):
         return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 22, 25)
+
+class DepartmentParser(CityParser):
+    zone_type = 'department'
+    account = department_account
+
+    table1_ix = 5
+    table2_ix = 6
+    finance_value_icol = 1
+    finance_name_icol = 0
+    tax_values_icol = [0, 4]
+    tax_name_icol = 3
+
+    def population(self, hxs):
+        xpath =  '//body/table[position()=4]/tr[position()=1]/td/text()'
+        pop = hxs.select(xpath).re(r': ([\d\s]+)\xa0')[0]
+        return int(pop.replace(' ', ''))
+
+    def has_taxes(self):
+        return True
+
+    def basis_taxes(self, hxs):
+        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 6)
+
+    def tax_cuts_on_deliberation(self, hxs):
+        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 6)
+
+    def tax_revenues(self, hxs):
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 8, 9)
+
+    def tax_rates(self, hxs):
+        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 8, 9, is_percent=True)
+
+    def repartition_taxes(self, hxs):
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 11, 13)
 
 

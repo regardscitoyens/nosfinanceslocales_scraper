@@ -9,8 +9,7 @@ sys.path.append(Path(__file__).ancestor(2))
 from scrapy.selector import HtmlXPathSelector
 from scrapy.http.response.html import HtmlResponse
 
-from localgouv.account_network import city_account
-from localgouv.account_parsing import CityParser, EPCIParser
+from localgouv.account_parsing import CityParser, EPCIParser, DepartmentParser
 
 def get_response(filepath, encoding='utf-8'):
     body = open(filepath, 'r').read()
@@ -36,7 +35,7 @@ class CommuneFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['home_tax']['basis'], 562000.)
         self.assertAlmostEqual(data['home_tax']['rate'], 0.0839)
 
-class CommuneFinanceParsingTestCase(unittest2.TestCase):
+class EPCIFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('data/epci_2012_account.html',
                                      encoding='windows-1252')
@@ -55,6 +54,27 @@ class CommuneFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['home_tax']['basis'], 8489000.)
         self.assertAlmostEqual(data['home_tax']['rate'], 0.023400)
         self.assertEqual(data['home_tax']['cuts_on_deliberation'], 33000)
+
+class DepartmentFinanceParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/department_2012_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = DepartmentParser('', 2012)
+        data = parser.parse(self.response)
+        self.assertEqual(data['population'], 148380)
+        # test data parsed from first table
+        self.assertEqual(data['operating_revenues'], 199333000)
+        self.assertEqual(data['direct_tax'], 41983000)
+        self.assertEqual(data['tipp'], 10860000)
+        self.assertEqual(data['operating_costs'], 185946000.)
+
+        # test data parsed from second table
+        self.assertEqual(data['property_tax']['basis'], 129386000)
+        self.assertEqual(data['property_tax']['value'], 30483000)
+        self.assertAlmostEqual(data['property_tax']['rate'], 0.2356)
+        self.assertEqual(data['business_profit_contribution']['cuts_on_deliberation'], 4000)
 
 if __name__ == '__main__':
     unittest2.main()
