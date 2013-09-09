@@ -63,6 +63,7 @@ class DepartmentFinanceParsingTestCase(unittest2.TestCase):
     def test_parsing(self):
         parser = DepartmentParser('', 2012)
         data = parser.parse(self.response)
+        self.assertEqual(data['name'], 'CANTAL')
         self.assertEqual(data['population'], 148380)
         # test data parsed from first table
         self.assertEqual(data['operating_revenues'], 199333000)
