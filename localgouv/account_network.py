@@ -20,6 +20,10 @@ class Network(object):
     def add_node(self, node, **attr):
         self.init_node(node, attr)
 
+    def add_nodes(self, nodes):
+        for node, attr in nodes.items():
+            self.add_node(node, **attr)
+
     def add_edge(self, node1, node2, **attr):
         if node1 not in self.nodes:
             self.init_node(node1)
@@ -88,6 +92,10 @@ class Account(Network):
         attr.update(type="section")
         self.add_node(node, **attr)
 
+    def add_lines(self, nodes):
+        for node, attr in nodes.items():
+            self.add_line(node, **attr)
+
     def add_relationship(self, node, r_nodes, operator):
         raise NotImplementedError
 
@@ -109,92 +117,109 @@ def make_base_account():
     account.add_edge('root', 'operatings_operations')
     account.add_edge('root', 'net_profit')
 
+
+    account.add_section('taxation', name=u'ELEMENTS DE FISCALITE LOCALE')
+    account.add_edge('root', 'taxation')
+
     return account
 
-def make_department_account():
-    # TODO: edges are not well defined, review them.
+def make_region_account():
     account = make_base_account()
 
-    # Rename these nodes
-    account.nodes['operating_revenues']['name'] = u"Total des produits de fonctionnement = A"
-    account.nodes['operating_costs']['name'] = u"Total des charges de fonctionnement = B"
-    account.nodes['net_profit']['name'] = u"Résultat comptable = A - B"
+    account.add_lines({
+        'operating_revenues': {'name': u"Total des produits de fonctionnement = A"},
+        'operating_real_revenues': {'name': u"produits de fonctionnement réels"},
+        'direct_tax': {'name': u"Impôts directs"},
+        'refund_tax': {'name': u"Fiscalité reversée"},
+        'other_tax': {'name': u"Autres impôts et taxes"},
+        'tipp': {'name': u"TIPP"},
+        'allocation': {'name': u"Dotation globale de fonctionnement"},
+        'training_and_learning_allocation': {'name': u"Dotation d'apprentissage et de formation professionnelle"},
+        'realignment': {'name': u"Attributions de péréquation et de compensation"},
+        'operating_costs': {'name': u"Total des charges de fonctionnement = B"},
+        'operating_real_costs': {'name': u"charges de fonctionnement réelles"},
+        'staff_costs': {'name': 'Charge de personnel (montant net)'},
+        'purchases_and_external_costs': {'name': u'Achats et charges externes (montant net)'},
+        'subsidies_and_contigents': {'name': u'Subventions et contingents'},
+        'mandatory_contributions_and_stakes': {'name': u'contributions obligatoires et participations'},
+        'subsidies': {'name': 'subventions'},
+        'individual_aids': {'name': u'aides à la personne'},
+        'financial_costs': {'name': u'Charges financières'},
+        'net_profit': {'name': u"Résultat comptable = A - B"},
+    })
 
-    account.add_line('operating_real_revenues', name=u'produits de fonctionnement réels')
-    account.add_edge('root', 'operating_revenues')
-
-    account.add_line('direct_tax', name=u'Impôts directs')
-    account.add_line('refund_tax', name=u'Fiscalité reversée')
-    account.add_line('other_tax', name=u'Autres impôts et taxes')
-    account.add_line('advertisement_tax', name=u"taxe départementale de publicité foncière et droits d'enregistrement")
-    account.add_line('tipp', name=u"TIPP")
-    account.add_line('allocation_and_stake', name=u"Dotations et participations")
-    account.add_line('allocation', name=u"dotation globale de fonctionnement")
-    account.add_line('training_and_learning_allocation', name=u"Dotation d'apprentissage et de formation professionnelle")
-    account.add_line('realignment', name=u"attributions de péréquation et de compensation")
     account.add_edges('operating_revenues',
                       ['operating_real_revenues', 'direct_tax', 'refund_tax',
-                       'other_tax', 'advertisement_tax', 'tipp',
-                       'allocation_and_stake', 'allocation',
+                       'other_tax', 'tipp', 'allocation',
                        'training_and_learning_allocation', 'realignment'])
 
-    account.add_line('staff_costs', name='Charge de personnel (montant net)')
-    account.add_line('purchases_and_external_costs', name=u'Achats et charges externes (montant net)')
-    account.add_line('subsidies_and_contigents', name='Subventions et contingents')
-    account.add_line('mandatory_contributions_and_stakes', name=u'contributions obligatoires et participations')
-    account.add_line('subsidies', name='subventions')
-    account.add_line('individual_aids', name=u'aides à la personne')
-    account.add_line('pch', name=u'PCH')
-    account.add_line('apa', name=u'APA')
-    account.add_line('rsa', name=u'RSA')
-    account.add_line('accomodation_costs', name=u"frais de séjour et d'hébergement")
-    account.add_line('financial_costs', name=u'Charges financières')
     account.add_edges('operating_costs',
                       ['staff_costs', 'purchases_and_external_costs',
                        'subsidies_and_contigents', 'mandatory_contributions_and_stakes',
-                       'subsidies', 'individual_aids', 'pch', 'apa', 'rsa',
-                       'accomodation_costs', 'financial_costs'])
+                       'subsidies', 'individual_aids', 'financial_costs',
+                       'operating_real_costs'])
+
 
     # INVESTMENTS
     account.add_section('investments', name="OPERATIONS D'INVESTISSEMENT")
     account.add_edge('root', 'investments')
-    account.add_line('investment_ressources',
-                     name=u"Total des ressources d'investissement budgétaires = C")
-    account.add_line('fctva', name=u"FCTVA") # What is FCTVA ?
-    account.add_line('received_subsidies', name=u"Subventions d'investissements reçues")
-    account.add_line('sold_fixed_assets', name=u"Produits des cessions d'immobilisations")
-    account.add_line('loans', name=u"Emprunts souscrits")
+    account.add_lines({
+        'investment_ressources': {'name': u"Total des ressources d'investissement budgétaires = C"},
+        'fctva': {'name': u"FCTVA"},
+        'received_subsidies': {'name': u"Subventions d'investissements reçues"},
+        'sold_fixed_assets': {'name': u"Produits des cessions d'immobilisations"},
+        'loans': {'name': u"Emprunts souscrits"},
+        'investments_usage': {'name': u"Total des emplois d'investissement budgétaires = D"},
+        'investments_direct_costs': {'name': u"Dépenses d'investissement directes"},
+        'paid_subsidies': {'name': u"Subventions d'équipement versées"},
+        'debt_repayments': {'name': u"Remboursement en capital des emprunts"},
+        'investment_needs': {'name': u"Besoin de financement de la section d'investissement"},
+        'thirdparty_balance': {'name': u"Solde des opérations pour compte de tiers"},
+        'debt_at_end_year': {'name': u'encours des dettes bancaires et assimilées'},
+        'debt_annual_costs': {'name': u'Annuité des dettes bancaires et assimilées'},
+    })
+
     account.add_edges('investment_ressources',
                       ['fctva', 'received_subsidies', 'sold_fixed_assets', 'loans'])
-
-
-    account.add_line('investments_usage',
-                     name=u"Total des emplois d'investissement budgétaires = D")
-    account.add_line('thirdparty_balance',
-                     name=u"Solde des opérations pour compte de tiers")
-    account.add_line('investment_needs',
-                     name=u"Besoin de financement de la section d'investissement")
-    account.add_edges('investments_usage', ['thirdparty_balance', 'investment_needs'])
+    account.add_edges('investments_usage', ['thirdparty_balance', 'investment_needs',
+                                            'investments_direct_costs',
+                                            'paid_subsidies', 'debt_repayments'])
     account.add_edges('investments', ['investment_ressources', 'investments_usage'])
-
-    # DEBT
-    account.add_line('debt_at_end_year',
-                     name=u'encours des dettes bancaires et assimilées')
-    account.add_line('debt_annual_costs',
-                     name=u'Annuité des dettes bancaires et assimilées')
 
     account.add_section('liabilities', name=u'ENDETTEMENT')
     account.add_edge('root', 'liabilities')
     account.add_edges('liabilities', ['debt_at_end_year', 'debt_annual_costs'])
 
+    account.add_line('business_profit_contribution', name=u"Cotisation Valeur Ajoutée des Entreprises")
+    account.add_line('business_network_tax', name=u"Imposition forfaitaire sur les entreprises de réseau")
+    account.add_edges('taxation', ['business_profit_contribution',
+                                   'business_network_tax'])
+
+    return account
+
+region_account = make_region_account()
+
+def make_department_account():
+    # TODO: edges are not well defined, review them.
+    account = make_region_account()
+
+    account.add_line('advertisement_tax', name=u"taxe départementale de publicité foncière et droits d'enregistrement")
+    account.add_line('allocation', name=u"dotation globale de fonctionnement")
+    account.add_line('realignment', name=u"attributions de péréquation et de compensation")
+    account.add_line('thirdparty_balance', name=u"Solde des opérations pour compte de tiers")
+    account.add_line('allocation_and_stake', name=u"Dotations et participations")
+    account.add_edges('operating_revenues',
+                      ['advertisement_tax', 'allocation_and_stake',])
+
+    account.add_line('pch', name=u'PCH')
+    account.add_line('apa', name=u'APA')
+    account.add_line('rsa', name=u'RSA')
+    account.add_line('accomodation_costs', name=u"frais de séjour et d'hébergement")
+    account.add_edges('operating_costs', ['pch', 'apa', 'rsa', 'accomodation_costs'])
+
     # TAXES
     account.add_line('property_tax', name=u"Taxe foncière sur les propriétés bâties")
-    account.add_line('business_profit_contribution', name=u"Cotisation Valeur Ajoutée des Entreprises")
-    account.add_line('business_network_tax', name=u'Impositions forfaitaires sur les entreprises de réseau')
-
-    account.add_section('taxation', name=u'ELEMENTS DE FISCALITE LOCALE')
-    account.add_edges('taxation', ['property_tax', 'business_profit_contribution', 'business_network_tax'])
-    account.add_edge('root', 'taxation')
+    account.add_edge('taxation', 'property_tax')
 
     return account
 
@@ -241,9 +266,12 @@ def make_city_account():
     account.add_line('debt_repayments', name=u"Remboursement d'emprunts et dettes assimilées")
     account.add_line('costs_to_allocate', name=u"Charges à répartir")
     account.add_line('fixed_assets', name=u"Immobilisations affectées, concédées, ...")
+    account.add_line('thirdparty_balance',
+                     name=u"Solde des opérations pour le compte de tiers")
     account.add_line('investments_usage', name=u"TOTAL DES EMPLOIS D'INVESTISSEMENT = D")
     account.add_edges('investments_usage', ['facilities_expenses', 'debt_repayments',
-                                            'costs_to_allocate', 'fixed_assets'])
+                                            'costs_to_allocate', 'fixed_assets',
+                                            'thirdparty_balance'])
 
     account.add_edges('investments', ['investment_ressources', 'investments_usage'])
 

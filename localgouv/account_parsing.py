@@ -3,7 +3,12 @@ from collections import defaultdict
 
 from scrapy.selector import HtmlXPathSelector
 
-from .account_network import city_account, epci_account, department_account
+from .account_network import (
+    city_account,
+    epci_account,
+    department_account,
+    region_account
+)
 
 
 def convert_value(val):
@@ -115,6 +120,8 @@ class CityParser(object):
         def update_data(new_data):
             for k, v in new_data.items():
                 if type(v) == dict:
+                    if k not in data:
+                        data[k] = v
                     data[k].update(v)
                 else:
                     data[k] = v
@@ -234,5 +241,30 @@ class DepartmentParser(CityParser):
 
     def repartition_taxes(self, hxs):
         return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 11, 13)
+
+class RegionParser(DepartmentParser):
+    zone_type = 'region'
+    account = region_account
+    tax_name_icol = 1
+
+    def name(self, hxs):
+        xpath =  '//body/table[position()=3]/tr[position()=1]/td/span/text()'
+        return hxs.select(xpath).extract()[0].split('SITUATION FINANCIERE de la REGION ')[1].strip()
+
+    def basis_taxes(self, hxs):
+        return {}
+
+    def tax_cuts_on_deliberation(self, hxs):
+        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[0], 3, 4)
+
+    def tax_rates(self, hxs):
+        return {}
+
+    def tax_revenues(self, hxs):
+        return {}
+
+    def repartition_taxes(self, hxs):
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 6, 8)
+
 
 

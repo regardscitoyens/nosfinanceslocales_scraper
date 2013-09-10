@@ -9,7 +9,12 @@ sys.path.append(Path(__file__).ancestor(2))
 from scrapy.selector import HtmlXPathSelector
 from scrapy.http.response.html import HtmlResponse
 
-from localgouv.account_parsing import CityParser, EPCIParser, DepartmentParser
+from localgouv.account_parsing import (
+    CityParser,
+    EPCIParser,
+    DepartmentParser,
+    RegionParser
+)
 
 def get_response(filepath, encoding='utf-8'):
     body = open(filepath, 'r').read()
@@ -76,6 +81,27 @@ class DepartmentFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['property_tax']['value'], 30483000)
         self.assertAlmostEqual(data['property_tax']['rate'], 0.2356)
         self.assertEqual(data['business_profit_contribution']['cuts_on_deliberation'], 4000)
+
+class RegionFinanceParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/region_2012_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = RegionParser('', 2012)
+        data = parser.parse(self.response)
+        self.assertEqual(data['name'], 'BASSE-NORMANDIE')
+        self.assertEqual(data['population'], 1470880)
+        # test data parsed from first table
+        self.assertEqual(data['operating_revenues'], 572356000)
+        self.assertEqual(data['direct_tax'], 78478000)
+        self.assertEqual(data['tipp'], 113678000.)
+        self.assertEqual(data['operating_costs'], 502385000)
+
+        # test data parsed from second table
+        self.assertEqual(data['business_profit_contribution']['value'], 64681000)
+        self.assertEqual(data['business_profit_contribution']['cuts_on_deliberation'], 288000)
+
 
 if __name__ == '__main__':
     unittest2.main()
