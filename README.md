@@ -1,7 +1,7 @@
 Localgouv
 =========
 
-This project aims at scrapping financial data of cities (="communes"), EPCI
+This project aims at scraping financial data of cities (="communes"), EPCI
 (group of cities Cf. [wikipedia](http://fr.wikipedia.org/wiki/%C3%89tablissement_public_de_coop%C3%A9ration_intercommunale)), department and regions from the website
 http://www.collectivites-locales.gouv.fr/.
 
@@ -18,9 +18,16 @@ Usage
 
 To scrap data of every cities on the fiscal year 2012, run in the root
 dir:
-`scrapy crawl localgouv -o scraped_data_dir/localgouv_2012.json -t json -a year=2012`
+`scrapy crawl localgouv -o scraped_data_dir/cities_2012.json -t json -a year=2012`
 
-To crawl EPCI, add an optionnal parameter `-a zone_type='epci'`.
+For EPCIs:
+`scrapy crawl localgouv -o scraped_data_dir/epci_2012.json -t json -a year=2012 -a zone_type=epci`
+
+For departments:
+`scrapy crawl localgouv -o scraped_data_dir/dep_2012.json -t json -a year=2012 -a zone_type=dep`
+
+For regions:
+`scrapy crawl localgouv -o scraped_data_dir/region_2012.json -t json -a year=2012 -a zone_type=reg`
 
 Scraped data samples are available in scraped_data directory:
  * [epci_2012.sample.json](scraped_data/epci_2012.sample.json)
@@ -31,13 +38,17 @@ Requirements
 [See requirements.txt file.](requirements.txt)
 
 
+Tests
+=====
+
+`python test/run.py`
+
 TODO
 ====
- * Crawl department and region pages.
  * Add some docs, especially indicate the mapping between variable names and
    fields in html pages.
  * Get simple stats on scraped data to check its quality (partly made for
-   cities).
+   cities and epci).
  * Add some tests on different fiscal years.
 
 
