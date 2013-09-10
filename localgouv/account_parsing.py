@@ -249,7 +249,8 @@ class RegionParser(DepartmentParser):
 
     def name(self, hxs):
         xpath =  '//body/table[position()=3]/tr[position()=1]/td/span/text()'
-        return hxs.select(xpath).extract()[0].split('SITUATION FINANCIERE de la REGION ')[1].strip()
+        name = hxs.select(xpath).extract()[0]
+        return name.split('SITUATION FINANCIERE de la ')[1].strip()
 
     def basis_taxes(self, hxs):
         return {}

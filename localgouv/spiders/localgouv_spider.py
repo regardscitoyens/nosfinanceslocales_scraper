@@ -7,8 +7,19 @@ from scrapy import log
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 
-from ..account_parsing import CityParser, EPCIParser, DepartmentParser
-from ..item import CityFinancialData, EPCIFinancialData, DepartmentFinancialData
+from ..account_parsing import (
+    CityParser,
+    EPCIParser,
+    DepartmentParser,
+    RegionParser
+)
+
+from ..item import (
+    CityFinancialData,
+    EPCIFinancialData,
+    DepartmentFinancialData,
+    RegionFinancialData
+)
 
 class LocalGouvFinanceSpider(BaseSpider):
     """Basic spider which crawls all pages of finance of french towns, departments
@@ -40,8 +51,24 @@ class LocalGouvFinanceSpider(BaseSpider):
         return [baseurl%row for __, row in data.iterrows()]
 
     def get_reg_urls(self, year):
-        reg_baseurl = "%s/regions/detail.php?reg=%%(reg)s&exercice=%s"%(self.domain, year)
-        return []
+        insee_code_file = "./data/reg2013.txt"
+        data = pd.io.parsers.read_csv(insee_code_file, '\t')
+        data['REGION'] = uniformize_code(data, 'REGION')
+        # Special case for DOM as usual
+        def set_dom_code(reg):
+            if reg == '001':
+                return '101'
+            elif reg == '002':
+                return '103'
+            elif reg == '003':
+                return '102'
+            elif reg == '004':
+                return '104'
+            else:
+                return reg
+        data['REGION'] = data['REGION'].apply(set_dom_code)
+        baseurl = "%s/regions/detail.php?reg=%%(REGION)s&exercice=%s"%(self.domain, year)
+        return [baseurl%row for __, row in data.iterrows()]
 
     def get_epci_urls(self, year):
         """Build url to crawl from insee file provided here
@@ -131,7 +158,11 @@ class LocalGouvFinanceSpider(BaseSpider):
         return item
 
     def parse_reg(self, response):
-        raise NotImplementedError
+        dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
+        parser = RegionParser(dep, year)
+        data = parser.parse(response)
+        item = RegionFinancialData(data)
+        return item
 
 def uniformize_code(df, column):
     # Uniformize dep code and commune code to be on a string of length 3.
