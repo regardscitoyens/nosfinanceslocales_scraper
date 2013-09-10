@@ -20,7 +20,7 @@ class AccountTestCase(unittest2.TestCase):
 
     def test_town_account(self):
         account = make_city_account()
-        self.assertEqual(46, len(account.nodes.items()))
+        self.assertEqual(45, len(account.nodes.items()))
 
     def test_find(self):
         account = Account()

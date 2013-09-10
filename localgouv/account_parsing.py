@@ -146,6 +146,8 @@ class CityParser(object):
                 if not is_percent:
                     val = val * 1000 if val else None
                 data[target][info_name] = val
+            else:
+                print "There is no node of name %s "%name
         return data
 
     def basis_taxes(self, hxs):
