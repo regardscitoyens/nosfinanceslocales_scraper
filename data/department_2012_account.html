@@ -1,0 +1,458 @@
+
+<html>
+
+<head>
+<title>tableau des departements</title>
+<link rel="stylesheet" type="text/css" href="dgcp3.css">
+<link rel="stylesheet" type="text/css" href="departement.css">
+<style type="text/css" media="print">
+#saut{page-break-before : always;}
+</style>
+<script type="text/javascript">
+<!--
+compt=0
+
+function ShowHint(txt,x,y){
+document.all.hint.innerHTML=txt;
+w=((txt.length)*7.5)
+if(w>500){w=500}
+document.all.hint.style.width=w+'px';
+document.all.hint.style.top=y;
+document.all.hint.style.left=x+10;
+document.all.hint.style.visibility='visible';
+compt=setTimeout('HideHint()',4000)
+}
+
+function HideHint(){
+clearTimeout(compt)
+document.all.hint.style.visibility='hidden';
+document.all.hint.innerHTML='';
+}
+function Init(txt){;
+HideHint();
+compt=setTimeout('ShowHint("'+ txt + '",' + event.x +',' + event.y +')',1000)
+}
+
+-->
+</script>
+</head>
+
+<body leftmargin="5">
+<p class="Logo"><br>
+Les Comptes des d&eacute;partements <br><p class="stitre">Donn&eacute;es exprim&eacute;es en euros</p>
+
+<table width="100%" align="center">
+<tr><td><a href="tableau.php?dep=015&exercice=2012">Retour</a> - <a href="javascript:window.opener.focus();window.close();">Retour menu</a></td><td align="right"><a href=
+"javascript:window.print()">Imprimer</a></td></tr></table>
+
+<table>
+<tr><td id="hint" style="background-color:FFFACD;color:#000000;border: 1px outset black; visibility:hidden; position:absolute"></td></tr>
+</table>
+
+	
+   <table width="100%" cellspacing="1">
+      <tr class="G">
+	  			   <td align="center"><span style="font-weight:bold;font-size:12pt;color:#fe9805">SITUATION FINANCIERE du DEPARTEMENT de CANTAL</span></td>
+			</tr>
+      <tr>
+    		 <td align="right" >&nbsp;</td>
+		     <td align="center"  class="bleu G" width="100">2012</td>
+			</tr> 
+	</table>
+	<table width="100%" cellspacing="1">		
+		  <tr class="bleu">
+	      	<td align="left" width="20%" class="libellepetit ">Population : 148 380&nbsp;</td>
+					<!--<td align="right" width="80%" class="G">STRATE : Départements de - de 250,000 habitants</td>-->
+  		</tr>
+		<tr class="bleu">
+				      	<td align="left" width="20%" class="libellepetit ">Strate de comparaison : Départements de - de 250 000 habitants&nbsp;</td>			
+			  		</tr>
+	</table>
+	
+	
+<table width="100%" cellspacing="1">
+	<!--<tr>
+		<th colspan="6">
+	</tr>-->
+		
+<!--SYNTHESE-->
+	<tr>	
+		<th style="Font-size:8pt;">Intitul&eacute;s des rubriques</th>
+		<th style="Font-size:8pt;">En milliers d'Euros</th>
+		<th style="Font-size:8pt;">Euros par habitant</th>	
+		<th style="Font-size:8pt;">Moyenne de la strate en &euro;/habitant</th>
+	</tr>
+	<tr class="bleu">  
+		<th width="450">FONCTIONNEMENT</th>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit G">Total des produits de fonctionnement = A</td>
+		<td class="montantpetit">199 333&nbsp;</td>
+		<td class="montantpetit">1 343&nbsp;</td>
+		<td class="montantpetit">1 203&nbsp;</td> 
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitId G">dont : produits de fonctionnement r&eacute;els</td>
+		<td class="montantpetit">190 661&nbsp;</td>
+		<td class="montantpetit">1 285&nbsp;</td>
+		<td class="montantpetit">1 184&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit">dont &nbsp;Imp&ocirc;ts directs</span></td>
+		<td class="montantpetit">41 983&nbsp;</td>
+		<td class="montantpetit">283&nbsp;</td>		
+	    <td class="montantpetit">272&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi"><span class="niv1">Fiscalit&eacute; revers&eacute;e</span></td>
+		<td class="montantpetit">3 791&nbsp;</td>
+		<td class="montantpetit">26&nbsp;</td>
+	    <td class="montantpetit">27&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi"><span class="niv1">Autres imp&ocirc;ts et taxes</span></td>
+		<td class="montantpetit">54 522&nbsp;</td>
+		<td class="montantpetit">367&nbsp;</td>
+	    <td class="montantpetit">386&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi"><span class="niv2">dont taxe d&eacute;partementale de publicit&eacute; fonci&egrave;re et droits d'enregistrement</span></td>
+		<td class="montantpetit">13 479&nbsp;</td>
+		<td class="montantpetit">91&nbsp;</td>
+		<td class="montantpetit">104&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI2"><span class="niv3">dont TIPP</span></td>
+		<td class="montantpetit">10 860&nbsp;</td>
+		<td class="montantpetit">73&nbsp;</td>
+		<td class="montantpetit">100&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi"><span class="niv1">Dotations et participations</span></td>
+		<td class="montantpetit">78 649&nbsp;</td>
+		<td class="montantpetit">530&nbsp;</td>
+		<td class="montantpetit">438&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI2"><span class="niv2">dont dotation globale de fonctionnement</span></td>
+		<td class="montantpetit">52 327&nbsp;</td>
+		<td class="montantpetit">353&nbsp;</td>
+		<td class="montantpetit">284&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI2 fin"><span class="niv2">dont attributions de p&eacute;r&eacute;quation et de compensation</span></td>
+		<td class="montantpetit fin">9 993&nbsp;</td>
+		<td class="montantpetit fin">67&nbsp;</td>
+		<td class="montantpetit fin">59&nbsp;</td>	
+	</tr>
+  
+	<!--Charges de fonctionnement-->
+	<tr class="bleu">
+		<td class="libellepetit G">Total des charges de fonctionnement = B</td>
+		<td class="montantpetit">185 946&nbsp;</td>
+		<td class="montantpetit">1 253&nbsp;</td>
+	    <td class="montantpetit">1 099&nbsp;</td>   
+	</tr>
+  
+	<tr class="bleu">
+		<td class="libellepetitId G">dont : charges de fonctionnement r&eacute;elles</td>
+		<td class="montantpetit">169 214&nbsp;</td>
+		<td class="montantpetit">1 140&nbsp;</td>
+		<td class="montantpetit">1 008&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit">dont: Charge de personnel (montant net)</td>
+		<td class="montantpetit">43 146&nbsp;</td>
+		<td class="montantpetit">291&nbsp;</td>		
+	    <td class="montantpetit">256&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi">Achats et charges externes (montant net)</td>
+		<td class="montantpetit">22 249&nbsp;</td>
+		<td class="montantpetit">150&nbsp;</td>		
+	    <td class="montantpetit">127&nbsp;</td>		
+	</tr>	
+	<tr class="bleu">
+		<td class="libellepetitIi">Subventions et contingents</td>
+		<td class="montantpetit">97 502&nbsp;</td>
+		<td class="montantpetit">657&nbsp;</td>		
+	    <td class="montantpetit">595&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI2">dont contributions obligatoires et participations</td>
+		<td class="montantpetit">18 731&nbsp;</td>
+		<td class="montantpetit">126&nbsp;</td>		
+	    <td class="montantpetit">89&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI3">&nbsp;subventions</td>
+		<td class="montantpetit">8 244&nbsp;</td>
+		<td class="montantpetit">56&nbsp;</td>		
+	    <td class="montantpetit">49&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI3">&nbsp;aides &agrave; la personne</td>
+		<td class="montantpetit">38 593&nbsp;</td>
+		<td class="montantpetit">260&nbsp;</td>		
+	    <td class="montantpetit">275&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI4">dont PCH</td>
+		<td class="montantpetit">1 988&nbsp;</td>
+		<td class="montantpetit">13&nbsp;</td>		
+	    <td class="montantpetit">21&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI4">dont APA</td>
+		<td class="montantpetit">22 939&nbsp;</td>
+		<td class="montantpetit">155&nbsp;</td>		
+	    <td class="montantpetit">120&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI4">dont RSA</td>
+		<td class="montantpetit">8 854&nbsp;</td>
+		<td class="montantpetit">60&nbsp;</td>		
+	    <td class="montantpetit">107&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitI3">&nbsp;frais de s&eacute;jour et d'h&eacute;bergement</td>
+		<td class="montantpetit">31 037&nbsp;</td>
+		<td class="montantpetit">209&nbsp;</td>		
+	    <td class="montantpetit">168&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi fin">Charges financi&egrave;res</td>
+		<td class="montantpetit fin">5 979&nbsp;</td>
+		<td class="montantpetit fin">40&nbsp;</td>		
+	    <td class="montantpetit fin">22&nbsp;</td>		
+	</tr>
+	
+	<tr class="bleu">
+		<td class="libellegrand fin">R&eacute;sultat comptable = A - B</td>
+		<td class="montantpetit fin">13 388&nbsp;</td>
+		<td class="montantpetit fin">90&nbsp;</td>		
+	    <td class="montantpetit fin">104&nbsp;</td>		
+	</tr>
+	
+	<tr class="bleu">
+		<td class="libellegrand fin">Capacit&eacute; d'autofinancement brute=CAF</td>
+		<td class="montantpetit fin">21 446&nbsp;</td>
+		<td class="montantpetit fin">145&nbsp;</td>		
+	    <td class="montantpetit fin">176&nbsp;</td>		
+	</tr>
+	
+	<tr class="bleu">  
+		<th width="350">INVESTISSEMENT</th>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit G">Total des ressources d'investissement budg&eacute;taires = C</td>
+		<td class="montantpetit">47 991&nbsp;</td>
+		<td class="montantpetit">323&nbsp;</td>
+	    <td class="montantpetit">412&nbsp;</td>
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit">dont : FCTVA</td>
+		<td class="montantpetit">2 242&nbsp;</td>
+		<td class="montantpetit">15&nbsp;</td>		
+	    <td class="montantpetit">25&nbsp;</td>		
+	</tr>	
+	<tr class="bleu">
+		<td class="libellepetitIi">Subventions d'investissements re&ccedil;ues</td>
+		<td class="montantpetit">6 876&nbsp;</td>
+		<td class="montantpetit">46&nbsp;</td>	
+	    <td class="montantpetit">43&nbsp;</td>		
+  </tr>
+	<tr class="bleu">
+		<td class="libellepetitIi">Produits des cessions d'immobilisations</td>
+		<td class="montantpetit">746&nbsp;</td>
+		<td class="montantpetit">5&nbsp;</td>	
+	    <td class="montantpetit">2&nbsp;</td>		
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi">Emprunts souscrits</td>
+		<td class="montantpetit">11 533&nbsp;</td>
+		<td class="montantpetit">78&nbsp;</td>	
+	    <td class="montantpetit">74&nbsp;</td>	
+	</tr>	
+	<!--<tr class="bleu">
+		<td class="libellepetitIi fin">Recettes d'op&eacute;rations pour le compte de tiers</td>
+		<td class="montantpetit fin">0&nbsp;</td>
+		<td class="montantpetit fin">0&nbsp;</td>	
+	    <td class="montantpetit fin">0&nbsp;</td>		
+	</tr>-->
+  
+	<tr class="bleu">
+		<td class="libellepetit G">Total des emplois d'investissement budg&eacute;taires = D</td>
+		<td class="montantpetit">57 034&nbsp;</td>
+		<td class="montantpetit">384&nbsp;</td>		
+		<td class="montantpetit">404&nbsp;</td> 
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit">dont : D&eacute;penses d'investissement directes</td>
+		<td class="montantpetit">18 028&nbsp;</td>
+		<td class="montantpetit">122&nbsp;</td>		
+	    <td class="montantpetit">143&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi">&nbsp;Subventions d'&eacute;quipement vers&eacute;es</td>
+		<td class="montantpetit">16 610&nbsp;</td>
+		<td class="montantpetit">112&nbsp;</td>		
+	    <td class="montantpetit">82&nbsp;</td>	
+	</tr>
+	
+	<tr class="bleu">
+		<td class="libellepetitIi">&nbsp;Remboursement en capital des emprunts</td>
+		<td class="montantpetit">13 778&nbsp;</td>
+		<td class="montantpetit">93&nbsp;</td>	
+	    <td class="montantpetit">59&nbsp;</td>
+	</tr>
+	<!--<tr class="bleu">
+		<td class="libellepetitIi fin">D&eacute;penses d'op&eacute;rations pour le compte de tiers</td>
+		<td class="montantpetit fin">0&nbsp;</td>
+		<td class="montantpetit fin">0&nbsp;</td>	
+	    <td class="montantpetit fin">0&nbsp;</td>		
+	</tr>-->
+	<tr class="bleu">
+		<td class="libellepetit G">Besoin de financement r&eacute;siduel = D-C</td>
+		<td class="montantpetit">9 044&nbsp;</td>
+		<td class="montantpetit">61&nbsp;</td>		
+		<td class="montantpetit">-8&nbsp;</td> 
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetitIi">&nbsp;Solde des op&eacute;rations pour compte de tiers</td>
+		<td class="montantpetit">-1 125&nbsp;</td>
+		<td class="montantpetit">-8&nbsp;</td>	
+	    <td class="montantpetit">-1&nbsp;</td>
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit G fin">Besoin de financement de la section d'investissement</td>
+		<td class="montantpetit fin">7 918&nbsp;</td>
+		<td class="montantpetit fin">53&nbsp;</td>		
+		<td class="montantpetit fin">-9&nbsp;</td> 
+	</tr>
+	<tr class="bleu">
+		<td class="libellegrand fin">R&eacute;sultat d'ensemble</td>
+		<td class="montantpetit fin">5 469&nbsp;</td>
+		<td class="montantpetit fin">37&nbsp;</td>		
+	    <td class="montantpetit fin">112&nbsp;</td>		
+	</tr>
+	  
+<!--endettement-->
+	<tr class="bleu">
+		<th width="350">DETTE</th>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>	
+	</tr>
+	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit">dont encours des dettes bancaires et assimil&eacute;es</td>
+		<td class="montantpetit">173 153&nbsp;</td>
+		<td class="montantpetit">1 167&nbsp;</td>
+		<td class="montantpetit">649&nbsp;</td>	
+	</tr>
+	<tr class="bleu">
+		<td class="libellepetit">Annuit&eacute; des dettes bancaires et assimil&eacute;es</td>
+		<td class="montantpetit">19 226&nbsp;</td>
+		<td class="montantpetit">130&nbsp;</td>
+		<td class="montantpetit">78&nbsp;</td>	
+	</tr>
+
+
+<!--FISCALITE-->
+</table>
+<p id="saut"></p>
+<table width="100%" cellspacing="1">
+	<tr class="bleu">
+		<th align="center" colspan="7">ELEMENTS DE FISCALITE LOCALE</th>
+	</tr>
+	<tr class="bleu">
+		<td colspan="7" style=";font-weight:bold;text-align:center">Les bases impos&eacute;es et les r&eacute;ductions (exon&eacute;rations, abattements) accord&eacute;es sur 
+d&eacute;lib&eacute;rations</td>
+	</tr>
+	<tr class="bleu">
+		<td colspan="3" style="text-align:center;font-weight:bold">Bases nettes impos&eacute;es au profit du d&eacute;partement</td>
+		<td  rowspan="2" style="text-align:center">Taxe</td>
+				<td colspan="3" style="text-align:center;font-weight:bold">R&eacute;ductions de bases accord&eacute;es sur d&eacute;lib&eacute;rations</td>
+			</tr>
+	<tr>
+		<th rowspan="" style="Font-size:8pt;">En milliers d'Euros</th>
+				<th colspan="" style="Font-size:8pt;">En euros par habitant</th>
+		<th  style="Font-size:8pt;">Moyenne nationale de la strate</th>
+		<th rowspan="" style="Font-size:8pt;">En milliers d'Euros</th>
+		<th colspan="" style="Font-size:8pt;">En euros par habitant</th>
+		<th  style="Font-size:8pt;">Moyenne nationale de la strate</th>
+			</tr>
+			<tr class="bleu">
+		<td class="montantpetitc">129 386&nbsp;</td>
+		<td class="montantpetitc">872&nbsp;</td>
+		<td class="montantpetitc">955&nbsp;</td>
+		<td class="libellepetit">Taxe fonci&egrave;re sur les propri&eacute;t&eacute;s b&acirc;ties</td>
+		<td class="montantpetitc">2&nbsp;</td>
+	    <td class="montantpetitc">0&nbsp;</td>
+		<td class="montantpetitc">0&nbsp;</td>
+	</tr>
+				<tr class="bleu">
+		<td class="montantpetit">&nbsp;-</td>
+		<td class="montantpetit">&nbsp;-</td>
+		<td class="montantpetit">&nbsp;-</td>	
+		<td class="libellepetit">Cotisation Valeur Ajout&eacute;e des Entreprises</td>
+		<td class="montantpetitc">4&nbsp;</td>	
+		<td class="montantpetitc">0&nbsp;</td>			
+		<td class="montantpetitc">0&nbsp;</td>
+	</tr>
+			
+	<tr class="bleu">
+		<td colspan="7" style="font-weight:bold;text-align:center">Les taux et les produits de la fiscalit&eacute; directe locale</td>
+	</tr>
+	<tr class="bleu">
+		<td colspan="3"  class="libellepetitc10 G">Produits</td>
+		<td  rowspan="" class="libellec">Taxe</td>
+		<td   rowspan="" class="libellepetitc10 G">Taux vot&eacute;</td>
+		<td   rowspan="" colspan="2" class="libellec">Taux moyen dans la strate</td>
+	</tr>
+		<tr class="bleu">
+		<td class="montantpetitc">30 483&nbsp;</td>
+		<td class="montantpetitc">205&nbsp;</td>		
+	    <td class="montantpetitc">208&nbsp;</td>		
+		<td class="libellepetit">Taxe fonci&egrave;re sur les propri&eacute;t&eacute;s b&acirc;ties</td>		
+		<td class="montantpetitc" >23,56%&nbsp;</td>		
+		<td class="montantpetitc"  colspan="2">21,77%&nbsp;</td>
+	</tr>
+				
+		<tr class="bleu">
+		<td colspan="7" style=";font-weight:bold;text-align:center">Produits des imp&ocirc;ts locaux de r&eacute;partition</td>
+	</tr>
+	<tr class="bleu">
+		<td colspan="3" class="libellepetitc">En milliers d'euros</td>
+		<td  rowspan="" class="libellec">Imp&ocirc;t</td>
+		<!--<td   colspan="3" style="text-align:center;font-weight:bold">&nbsp;</td>-->
+		<td   rowspan="" class="libellepetitc">Euros par habitant</td>
+		<td   rowspan="" colspan="2" class="libellepetitc">Moyenne dans la strate</td>
+	</tr>
+	<tr class="bleu">
+		<td class="montantpetitc" colspan="3" >9 829&nbsp;</td>
+		<td class="libellepetit">Cotisation Valeur Ajout&eacute;e des Entreprises</td>
+		<td class="montantpetitc">66&nbsp;</td>
+		<td class="montantpetitc" colspan="2">68&nbsp;</td>
+	</tr>
+	<tr class="bleu">
+		<td class="montantpetitc" colspan="3">1 584&nbsp;</td>
+		<td class="libellepetit">Imposition forfaitaire sur les entreprises de r&eacute;seau</td>
+		<td class="montantpetitc">11&nbsp;</td>
+		<td class="montantpetitc" colspan="2">5&nbsp;</td>
+	</tr>
+			
+	
+</table>
+</body>
+</html>
+
+
