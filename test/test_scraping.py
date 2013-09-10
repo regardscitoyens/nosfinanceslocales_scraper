@@ -90,7 +90,7 @@ class RegionFinanceParsingTestCase(unittest2.TestCase):
     def test_parsing(self):
         parser = RegionParser('', 2012)
         data = parser.parse(self.response)
-        self.assertEqual(data['name'], 'BASSE-NORMANDIE')
+        self.assertEqual(data['name'], 'REGION BASSE-NORMANDIE')
         self.assertEqual(data['population'], 1470880)
         # test data parsed from first table
         self.assertEqual(data['operating_revenues'], 572356000)
