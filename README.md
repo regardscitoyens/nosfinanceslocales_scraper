@@ -41,7 +41,7 @@ Requirements
 Tests
 =====
 
-`python test/run.py`
+`unit2 discover`
 
 TODO
 ====
