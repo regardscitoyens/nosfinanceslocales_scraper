@@ -104,19 +104,6 @@ class LocalGouvFinanceSpider(BaseSpider):
 
         data['DEP'] = convert_dom_code(data)
 
-        # Another strange thing, DOM cities have an insee_code on 2 digits in the
-        # insee file. We need to add a third digit before these two to crawl the
-        # right page. This third digit is find according to this mapping:
-        # GUADELOUPE: 1
-        # MARTINIQUE: 2
-        # GUYANE: 3
-        # REUNION: 4
-        digit_mapping = {'101': 1, '103': 2, '102': 3, '104': 4}
-        def convert_city(row):
-            if row['DEP'] not in ['101', '102', '103', '104']:
-                return row['COM']
-            first_digit = str(digit_mapping.get(row['DEP']))
-            return first_digit + row['COM'][1:]
         data['COM'] = data.apply(convert_city, axis=1)
 
         baseurl = "%s/communes/eneuro/detail.php?icom=%%(COM)s&dep=%%(DEP)s&type=BPS&param=0&exercice=%s"%(self.domain,str(year))
@@ -136,7 +123,7 @@ class LocalGouvFinanceSpider(BaseSpider):
         """Parse the response and return an Account object"""
         hxs = HtmlXPathSelector(response)
         icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})', response.url).groups()
-        parser = CityParser(icom+dep, year)
+        parser = CityParser(dep+icom, year)
         data = parser.parse(response)
         # convert account object to an Item instance.
         # WHY DO I NEED TO DO THAT SCRAPY ????
@@ -185,3 +172,18 @@ def convert_dom_code(df, column='DEP'):
             '974': '104',
         }.get(code, code)
     return df[column].apply(convert_dep)
+
+def convert_city(row):
+    # Another strange thing, DOM cities have an insee_code on 2 digits in the
+    # insee file. We need to add a third digit before these two to crawl the
+    # right page. This third digit is find according to this mapping:
+    # GUADELOUPE: 1
+    # MARTINIQUE: 2
+    # GUYANE: 3
+    # REUNION: 4
+    digit_mapping = {'101': 1, '103': 2, '102': 3, '104': 4}
+    if row['DEP'] not in ['101', '102', '103', '104']:
+        return row['COM']
+    first_digit = str(digit_mapping.get(row['DEP']))
+    return first_digit + row['COM'][1:]
+
