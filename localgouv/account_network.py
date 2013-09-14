@@ -266,14 +266,19 @@ def make_city_account():
     account.add_line('debt_repayments', name=u"Remboursement d'emprunts et dettes assimilées")
     account.add_line('costs_to_allocate', name=u"Charges à répartir")
     account.add_line('fixed_assets', name=u"Immobilisations affectées, concédées, ...")
+    account.add_line('residual_financing_capacity', name=u"Besoin ou capacité de financement Résiduel de la section d'investissement = D - C")
     account.add_line('thirdparty_balance',
                      name=u"Solde des opérations pour le compte de tiers")
+    account.add_line('financing_capacity', name=u"= Besoin ou capacité de financement de la section d'investissement = E")
     account.add_line('investments_usage', name=u"TOTAL DES EMPLOIS D'INVESTISSEMENT = D")
     account.add_edges('investments_usage', ['facilities_expenses', 'debt_repayments',
                                             'costs_to_allocate', 'fixed_assets',
-                                            'thirdparty_balance'])
+                                            'residual_financing_capacity',
+                                            'thirdparty_balance', 'financing_capacity'])
 
     account.add_edges('investments', ['investment_ressources', 'investments_usage'])
+    account.add_line('global_profit', name=u"Résultat d'ensemble = R - E")
+    account.add_edge('root', 'global_profit')
 
     ## SELF-FINANCING
     account.add_section('self_financing', name=u'AUTOFINANCEMENT')
@@ -291,8 +296,9 @@ def make_city_account():
     account.add_line('debt_at_end_year', name=u'Encours total de la dette au 31/12/N')
     account.add_line('debt_annual_costs', name=u'Annuité de la dette')
     account.add_line('advances_from_treasury', name=u'Avances du Trésor au 31/12/N')
+    account.add_line('working_capital', name=u'FONDS DE ROULEMENT')
     account.add_edges('liabilities', ['debt_at_end_year', 'debt_annual_costs',
-                                      'advances_from_treasury'])
+                                      'advances_from_treasury', 'working_capital'])
 
     # TAXES
     account.add_section('taxation', name=u'ELEMENTS DE FISCALITE DIRECTE LOCALE')

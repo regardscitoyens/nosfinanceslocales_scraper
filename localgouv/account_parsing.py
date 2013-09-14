@@ -15,14 +15,22 @@ def convert_value(val):
     """Remove crap from val string and then convert it into float"""
     val = val.replace(u'\xa0', '')\
              .replace(',', '.')\
-             .replace('-', '')\
              .replace(u'\xa0', '')\
              .replace(' ', '')
-    if val:
+    mult = 1
+
+    if '-' in val and len(val) > 1:
+        mult = -1
+        val = val.replace('-', '')
+    elif '-' in val:
+        val = '0'
+
+    if val is not None:
         if '%' in val:
             val = float(val.replace('%', ''))/100
-        return float(val)
+        return float(val) * mult
     else:
+        print "none"
         return None
 
 
@@ -98,41 +106,43 @@ class CityParser(object):
             tds = tr.select('.//td')
             if len(tds) <= self.finance_name_icol:
                 continue
+
             name_td = tds[self.finance_name_icol].select('.//text()').extract()
             if not name_td or not name_td[0].strip():
-                continue
+                ths = tr.select('.//th')
+                if ths:
+                    name_td = ths[0].select('.//text()').extract()
+                    if not name_td:
+                        continue
+                else:
+                    continue
             name = name_td[0]
             name = name.replace('dont', '').replace(':', '').replace('+', '').strip()
             targets = self.account.find_node(name=name, type='accountline')
             if targets:
                 target = targets[0]
-                value = convert_value(tds[self.finance_value_icol]\
-                    .select('.//text()').extract()[0]) * 1000
-                if value is not None:
-                    data[target] = value
+                try:
+                    value = convert_value(tds[self.finance_value_icol]\
+                        .select('.//text()').extract()[0]) * 1000
+                    if value is not None:
+                        data[target] = value
+                except IndexError:
+                    print "no value for node %s "%name
             else:
                 print "There is no node of name %s "%name
 
         return data
 
     def taxes(self, hxs):
-        data = self.basis_taxes(hxs)
-        def update_data(new_data):
-            for k, v in new_data.items():
-                if type(v) == dict:
-                    if k not in data:
-                        data[k] = v
-                    data[k].update(v)
-                else:
-                    data[k] = v
-        update_data(self.tax_cuts_on_deliberation(hxs))
-        update_data(self.tax_revenues(hxs))
-        update_data(self.tax_rates(hxs))
-        update_data(self.repartition_taxes(hxs))
+        data = self.tax_basis(hxs)
+        data.update(self.tax_cuts_on_deliberation(hxs))
+        data.update(self.tax_revenues(hxs))
+        data.update(self.tax_rates(hxs))
+        data.update(self.repartition_taxes(hxs))
         return data
 
     def parse_one_tax_info(self, hxs, info_name, icol_value, start_row, end_row, is_percent=False):
-        data = defaultdict(dict)
+        data = {}
         for row in self.table2(hxs).select('.//tr')[start_row:end_row]:
             tds = row.select('.//td')
             if len(tds) <= max(icol_value, self.tax_name_icol):
@@ -142,25 +152,30 @@ class CityParser(object):
             if targets:
                 target = targets[0]
                 str_val = tds[icol_value].select('./text()').extract()[0].strip()
-                val = convert_value(str_val)
+                try:
+                    val = convert_value(str_val)
+                except ValueError:
+                    print u"There is no valid value for the node %s"%target
+                    continue
+
                 if not is_percent:
-                    val = val * 1000 if val else None
-                data[target][info_name] = val
+                    val = val * 1000 if val is not None else None
+                data["%s_%s"%(target,info_name)] = val
             else:
                 print "There is no node of name %s "%name
         return data
 
-    def basis_taxes(self, hxs):
-        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 8)
+    def tax_basis(self, hxs):
+        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 9)
 
     def tax_cuts_on_deliberation(self, hxs):
-        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 8)
+        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 9)
 
     def tax_revenues(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 10, 15)
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 11, 16)
 
     def tax_rates(self, hxs):
-        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 10, 15, is_percent=True)
+        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 11, 16, is_percent=True)
 
     def repartition_taxes(self, hxs):
         return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 18, 21)
@@ -191,7 +206,7 @@ class EPCIParser(CityParser):
         return int(pop.replace(' ', ''))
 
 
-    def basis_taxes(self, hxs):
+    def tax_basis(self, hxs):
         return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 11)
 
     def tax_cuts_on_deliberation(self, hxs):
@@ -229,7 +244,7 @@ class DepartmentParser(CityParser):
     def has_taxes(self):
         return True
 
-    def basis_taxes(self, hxs):
+    def tax_basis(self, hxs):
         return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 6)
 
     def tax_cuts_on_deliberation(self, hxs):
@@ -254,7 +269,7 @@ class RegionParser(DepartmentParser):
         name = hxs.select(xpath).extract()[0]
         return name.split('SITUATION FINANCIERE de la ')[1].strip()
 
-    def basis_taxes(self, hxs):
+    def tax_basis(self, hxs):
         return {}
 
     def tax_cuts_on_deliberation(self, hxs):
