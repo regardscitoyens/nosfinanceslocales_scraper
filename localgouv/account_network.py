@@ -328,6 +328,13 @@ def make_city_account():
                                                   'business_network_tax',
                                                   'retail_land_tax'])
 
+    for tax in ['home_tax', 'property_tax', 'land_property_tax', 'business_tax', 'additionnal_land_property_tax', 'business_property_contribution', 'business_profit_contribution', 'business_network_tax', 'retail_land_tax']:
+        for tax_info in ['basis', 'rate', 'value', 'cuts_on_deliberation']:
+            tax_info_node = "%s_%s"%(tax, tax_info)
+            account.add_line("%s_%s"%(tax, tax_info), name=tax_info)
+            account.add_edge(tax, tax_info_node)
+
+
     account.add_edges('taxation', ['home_tax', 'property_tax', 'land_property_tax',
                                    'additionnal_land_property_tax',
                                    'allocation_tax_revenues'])

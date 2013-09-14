@@ -160,7 +160,11 @@ class CityParser(object):
 
                 if not is_percent:
                     val = val * 1000 if val is not None else None
-                data["%s_%s"%(target,info_name)] = val
+                if info_name:
+                    key = "%s_%s"%(target,info_name)
+                else:
+                    key = target
+                data[key] = val
             else:
                 print "There is no node of name %s "%name
         return data
