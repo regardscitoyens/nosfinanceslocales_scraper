@@ -13,6 +13,7 @@ class FinancialData(Item):
     zone_type = Field()
     name = Field()
     year = Field()
+    url = Field()
 
 class CityFinancialData(FinancialData):
    insee_code = Field()

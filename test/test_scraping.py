@@ -27,7 +27,7 @@ class CommuneFinanceParsingTestCase(unittest2.TestCase):
         self.response = get_response('data/commune_2012_account.html')
 
     def test_parsing(self):
-        parser = CityParser('', 2012)
+        parser = CityParser('', 2012, '')
         data = parser.parse(self.response)
         self.assertEqual(data['name'], 'AILLANT-SUR-MILLERON')
         self.assertEqual(data['population'], 394)
@@ -86,8 +86,11 @@ class CommuneFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['business_property_contribution_value'], 0.)
         self.assertEqual(data['business_property_contribution_rate'], 0.)
         self.assertEqual(data['business_profit_contribution_value'], 0.)
+        self.assertEqual(data['business_profit_contribution_cuts_on_deliberation'], 0.)
         self.assertEqual(data['business_network_tax_value'], 0.)
+        self.assertEqual(data['business_network_tax_cuts_on_deliberation'], 0.)
         self.assertEqual(data['retail_land_tax_value'], 0.)
+        self.assertEqual(data['retail_land_tax_cuts_on_deliberation'], 0.)
 
 class EPCIFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
@@ -95,7 +98,7 @@ class EPCIFinanceParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = EPCIParser('', 2012)
+        parser = EPCIParser('', 2012, '')
         data = parser.parse(self.response)
         self.assertEqual(data['population'], 2701)
         # test data parsed from first table
@@ -115,7 +118,7 @@ class DepartmentFinanceParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = DepartmentParser('', 2012)
+        parser = DepartmentParser('', 2012, '')
         data = parser.parse(self.response)
         self.assertEqual(data['name'], 'CANTAL')
         self.assertEqual(data['population'], 148380)
@@ -137,7 +140,7 @@ class RegionFinanceParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = RegionParser('', 2012)
+        parser = RegionParser('', 2012, '')
         data = parser.parse(self.response)
         self.assertEqual(data['name'], 'REGION BASSE-NORMANDIE')
         self.assertEqual(data['population'], 1470880)

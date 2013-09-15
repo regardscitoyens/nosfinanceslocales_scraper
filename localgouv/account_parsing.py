@@ -52,10 +52,11 @@ class CityParser(object):
     # the fourth. The name of the data in third column.
     tax_values_icol = [0, 4]
     tax_name_icol = 3
-    def __init__(self, insee_code, year):
+    def __init__(self, insee_code, year, url):
         self.data = {'insee_code':insee_code,
                      'year': year,
-                     'zone_type': self.zone_type}
+                     'zone_type': self.zone_type,
+                     'url': url}
 
     def has_taxes(self):
         # For years > 2008, we have also tax data
@@ -182,8 +183,9 @@ class CityParser(object):
         return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 11, 16, is_percent=True)
 
     def repartition_taxes(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 18, 21)
-
+        data = self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 18, 21)
+        data.update(self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 18, 21))
+        return data
 class EPCIParser(CityParser):
     zone_type = 'epci'
     account = epci_account
@@ -197,10 +199,11 @@ class EPCIParser(CityParser):
     # the fourth. The name of the data in third column.
     tax_values_icol = [0, 3]
     tax_name_icol = 2
-    def __init__(self, siren, year):
+    def __init__(self, siren, year, url):
         self.data = {'siren':siren,
                      'year': year,
-                     'zone_type': self.zone_type}
+                     'zone_type': self.zone_type,
+                     'url': url}
 
     def has_taxes(self):
         return True
@@ -261,6 +264,7 @@ class DepartmentParser(CityParser):
         return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 8, 9, is_percent=True)
 
     def repartition_taxes(self, hxs):
+        # TODO: add parsing of cuts_on_deliberation
         return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 11, 13)
 
 class RegionParser(DepartmentParser):

@@ -123,7 +123,7 @@ class LocalGouvFinanceSpider(BaseSpider):
         """Parse the response and return an Account object"""
         hxs = HtmlXPathSelector(response)
         icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})', response.url).groups()
-        parser = CityParser(dep+icom, year)
+        parser = CityParser(dep+icom, year, response.url)
         data = parser.parse(response)
         # convert account object to an Item instance.
         # WHY DO I NEED TO DO THAT SCRAPY ????
@@ -132,21 +132,21 @@ class LocalGouvFinanceSpider(BaseSpider):
 
     def parse_epci(self, response):
         siren, year = re.search('siren=(\d+)&dep=\w{3}&type=BPS&exercice=(\d{4})', response.url).groups()
-        parser = EPCIParser(siren, year)
+        parser = EPCIParser(siren, year, response.url)
         data = parser.parse(response)
         item = EPCIFinancialData(data)
         return item
 
     def parse_dep(self, response):
         dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
-        parser = DepartmentParser(dep, year)
+        parser = DepartmentParser(dep, year, response.url)
         data = parser.parse(response)
         item = DepartmentFinancialData(data)
         return item
 
     def parse_reg(self, response):
         dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
-        parser = RegionParser(dep, year)
+        parser = RegionParser(dep, year, response.url)
         data = parser.parse(response)
         item = RegionFinancialData(data)
         return item

@@ -18,10 +18,6 @@ class AccountTestCase(unittest2.TestCase):
         account.add_section('operating_revenues_A', name=u'TOTAL DES PRODUITS DE FONCTIONNEMENT = A')
         account.add_edges('operating_revenues_A', ['localtax', 'other_tax', 'allocation'])
 
-    def test_town_account(self):
-        account = make_city_account()
-        self.assertEqual(85, len(account.nodes.items()))
-
     def test_find(self):
         account = Account()
         account.add_line('localtax', name=u'Impôts Locaux', other=u'test')
