@@ -328,17 +328,15 @@ def make_city_account():
                                                   'business_network_tax',
                                                   'retail_land_tax'])
 
-    tax_info = ['basis', 'rate', 'value', 'cuts_on_deliberation']
+    tax_infos = ['basis', 'cuts_on_deliberation', 'value', 'rate']
     tax_info_names = [u"Bases nettes imposées",
-                      u"Réductions de bases accordées sur délibérations", 
+                      u"Réductions de bases accordées sur délibérations",
                       u"Produits des impôts locaux",
-                      u"Taux voté",
-                      u"Produits des impôts de répartition",
-                      ]
+                      u"Taux voté"]
     for tax in ['home_tax', 'property_tax', 'land_property_tax', 'business_tax', 'additionnal_land_property_tax', 'business_property_contribution', 'business_profit_contribution', 'business_network_tax', 'retail_land_tax']:
-        for tax_info, tax_info_name in zip(tax_info, tax_info_names):
+        for (tax_info, tax_info_name) in zip(tax_infos, tax_info_names):
             tax_info_node = "%s_%s"%(tax, tax_info)
-            account.add_line("%s_%s"%(tax, tax_info), name=tax_info_name)
+            account.add_line(tax_info_node, name=tax_info_name)
             account.add_edge(tax, tax_info_node)
 
 
