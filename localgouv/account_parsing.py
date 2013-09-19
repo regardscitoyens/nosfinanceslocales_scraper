@@ -58,10 +58,6 @@ class CityParser(object):
                      'zone_type': self.zone_type,
                      'url': url}
 
-    def has_taxes(self):
-        # For years > 2008, we have also tax data
-        return int(self.data['year']) > 2008
-
     def parse(self, response):
         """Parse html account table of a city for a given year
         crawled from http://alize2.finances.gouv.fr.
@@ -73,10 +69,7 @@ class CityParser(object):
         data['name'] = self.name(hxs)
 
         data.update(self.finance(hxs))
-
-        # For years > 2008, we have also tax data
-        if self.has_taxes():
-            data.update(self.taxes(hxs))
+        data.update(self.taxes(hxs))
 
         return data
 
@@ -90,10 +83,6 @@ class CityParser(object):
     def table1(self, hxs):
         """Select table where we have name, population, and finance data"""
         return hxs.select('//body/table[position()=%s]'%self.table1_ix)
-
-    def table2(self, hxs):
-        """Select table where we have tax data"""
-        return hxs.select('//body/table[position()=%s]'%self.table2_ix)
 
     def finance(self, hxs):
         # For this table, we have:
@@ -135,6 +124,27 @@ class CityParser(object):
         return data
 
     def taxes(self, hxs):
+        # For years > 2008, we have also tax data
+        if int(self.data['year']) > 2008:
+            return After2008TaxParser(self.account).parse(hxs)
+        else:
+            return Before2008TaxParser(self.account).parse(hxs)
+
+class TaxParser(object):
+    def __init__(self, account, table_ix=4, tax_values_icol=(0,4), tax_name_icol=3):
+        # In the table with tax data, the values can be in the first column and
+        # the fourth. The name of the data in third column.
+        self.account = account
+        self.table_ix = table_ix
+        self.tax_values_icol = tax_values_icol
+        self.tax_name_icol = tax_name_icol
+
+    def table(self, hxs):
+        """Select table where we have tax data"""
+        return hxs.select('//body/table[position()=%s]'%self.table_ix)
+
+class After2008TaxParser(TaxParser):
+    def parse(self, hxs):
         data = self.tax_basis(hxs)
         data.update(self.tax_cuts_on_deliberation(hxs))
         data.update(self.tax_revenues(hxs))
@@ -144,7 +154,7 @@ class CityParser(object):
 
     def parse_one_tax_info(self, hxs, info_name, icol_value, start_row, end_row, is_percent=False):
         data = {}
-        for row in self.table2(hxs).select('.//tr')[start_row:end_row]:
+        for row in self.table(hxs).select('.//tr')[start_row:end_row]:
             tds = row.select('.//td')
             if len(tds) <= max(icol_value, self.tax_name_icol):
                 continue
@@ -177,15 +187,34 @@ class CityParser(object):
         return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 9)
 
     def tax_revenues(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 11, 16)
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 10, 16)
 
     def tax_rates(self, hxs):
-        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 11, 16, is_percent=True)
+        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 10, 16, is_percent=True)
 
     def repartition_taxes(self, hxs):
         data = self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 18, 21)
         data.update(self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 18, 21))
         return data
+
+
+class Before2008TaxParser(TaxParser):
+    def __init__(self, *args, **kwargs):
+        super(Before2008TaxParser, self).__init__(*args, **kwargs)
+        self.table_ix = 3
+
+    def parse(self, hxs):
+        data = {}
+        tax_names = ['home_tax', 'property_tax', 'land_property_tax', 'business_tax']
+        for tr, tax_name in zip(self.table(hxs).select('.//tr')[20:24], tax_names):
+            tds = tr.select('.//td/text()')
+            name = tds[self.tax_name_icol].extract().strip()
+            value = convert_value(tds[self.tax_values_icol[0]].extract()) * 1000
+            rate = convert_value(tds[self.tax_values_icol[1]].extract()) / 100
+            data['%s_%s'%(tax_name, 'value')] = value
+            data['%s_%s'%(tax_name, 'rate')] = rate
+        return data
+
 class EPCIParser(CityParser):
     zone_type = 'epci'
     account = epci_account
@@ -195,24 +224,20 @@ class EPCIParser(CityParser):
     finance_value_icol = 0
     finance_name_icol = 2
 
-    # In the table with tax data, the values can be in the first column and
-    # the fourth. The name of the data in third column.
-    tax_values_icol = [0, 3]
-    tax_name_icol = 2
     def __init__(self, siren, year, url):
         self.data = {'siren':siren,
                      'year': year,
                      'zone_type': self.zone_type,
                      'url': url}
 
-    def has_taxes(self):
-        return True
-
     def population(self, hxs):
         pop = self.table1(hxs).select('.//tr[position()=2]').re(r': ([\d\s]+) habitants')[0]
         return int(pop.replace(' ', ''))
 
+    def taxes(self, hxs):
+        return EPCITaxParser(self.account, tax_values_icol=(0,3), tax_name_icol=2).parse(hxs)
 
+class EPCITaxParser(After2008TaxParser):
     def tax_basis(self, hxs):
         return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 11)
 
@@ -233,11 +258,8 @@ class DepartmentParser(CityParser):
     account = department_account
 
     table1_ix = 5
-    table2_ix = 6
     finance_value_icol = 1
     finance_name_icol = 0
-    tax_values_icol = [0, 4]
-    tax_name_icol = 3
 
     def name(self, hxs):
         xpath =  '//body/table[position()=3]/tr[position()=1]/td/span/text()'
@@ -248,9 +270,10 @@ class DepartmentParser(CityParser):
         pop = hxs.select(xpath).re(r': ([\d\s]+)\xa0')[0]
         return int(pop.replace(' ', ''))
 
-    def has_taxes(self):
-        return True
+    def taxes(self, hxs):
+        return DepTaxParser(self.account, table_ix=6, tax_values_icol=(0,4), tax_name_icol=3).parse(hxs)
 
+class DepTaxParser(After2008TaxParser):
     def tax_basis(self, hxs):
         return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 6)
 
@@ -270,13 +293,16 @@ class DepartmentParser(CityParser):
 class RegionParser(DepartmentParser):
     zone_type = 'region'
     account = region_account
-    tax_name_icol = 1
 
     def name(self, hxs):
         xpath =  '//body/table[position()=3]/tr[position()=1]/td/span/text()'
         name = hxs.select(xpath).extract()[0]
         return name.split('SITUATION FINANCIERE de la ')[1].strip()
 
+    def taxes(self, hxs):
+        return RegTaxParser(self.account, table_ix=6, tax_values_icol=(0,4), tax_name_icol=1).parse(hxs)
+
+class RegTaxParser(DepTaxParser):
     def tax_basis(self, hxs):
         return {}
 

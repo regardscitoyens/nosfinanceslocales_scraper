@@ -140,12 +140,14 @@ def make_region_account():
         'operating_real_costs': {'name': u"charges de fonctionnement réelles"},
         'staff_costs': {'name': 'Charge de personnel (montant net)'},
         'purchases_and_external_costs': {'name': u'Achats et charges externes (montant net)'},
-        'subsidies_and_contigents': {'name': u'Subventions et contingents'},
+        'subsidies_and_contingents': {'name': u'Subventions et contingents'},
         'mandatory_contributions_and_stakes': {'name': u'contributions obligatoires et participations'},
         'subsidies': {'name': 'subventions'},
         'individual_aids': {'name': u'aides à la personne'},
         'financial_costs': {'name': u'Charges financières'},
         'net_profit': {'name': u"Résultat comptable = A - B"},
+        'self_financing_capacity': {'name': [u"Capacité d'autofinancement = CAF",
+                                             u"Capacité d'autofinancement brute=CAF"]},
     })
 
     account.add_edges('operating_revenues',
@@ -155,9 +157,9 @@ def make_region_account():
 
     account.add_edges('operating_costs',
                       ['staff_costs', 'purchases_and_external_costs',
-                       'subsidies_and_contigents', 'mandatory_contributions_and_stakes',
+                       'subsidies_and_contingents', 'mandatory_contributions_and_stakes',
                        'subsidies', 'individual_aids', 'financial_costs',
-                       'operating_real_costs'])
+                       'operating_real_costs', 'self_financing_capacity'])
 
 
     # INVESTMENTS
@@ -173,17 +175,21 @@ def make_region_account():
         'investments_direct_costs': {'name': u"Dépenses d'investissement directes"},
         'paid_subsidies': {'name': u"Subventions d'équipement versées"},
         'debt_repayments': {'name': u"Remboursement en capital des emprunts"},
+        'residual_investment_needs': {'name': u"Besoin de financement résiduel = D-C"},
         'investment_needs': {'name': u"Besoin de financement de la section d'investissement"},
         'thirdparty_balance': {'name': u"Solde des opérations pour compte de tiers"},
         'debt_at_end_year': {'name': u'encours des dettes bancaires et assimilées'},
         'debt_annual_costs': {'name': u'Annuité des dettes bancaires et assimilées'},
+        'global_profit': {'name': u"Résultat d'ensemble"},
     })
 
     account.add_edges('investment_ressources',
                       ['fctva', 'received_subsidies', 'sold_fixed_assets', 'loans'])
     account.add_edges('investments_usage', ['thirdparty_balance', 'investment_needs',
+                                            'residual_investment_needs',
                                             'investments_direct_costs',
-                                            'paid_subsidies', 'debt_repayments'])
+                                            'paid_subsidies', 'debt_repayments',
+                                            'global_profit'])
     account.add_edges('investments', ['investment_ressources', 'investments_usage'])
 
     account.add_section('liabilities', name=u'ENDETTEMENT')
@@ -243,10 +249,10 @@ def make_city_account():
     account.add_line('staff_costs', name=u'Charges de personnel')
     account.add_line('purchases_and_external_costs', name=u'Achats et charges externes')
     account.add_line('financial_costs', name=u'Charges financières')
-    account.add_line('contigents', name=u'Contingents') # Find another name ?
+    account.add_line('contingents', name=u'Contingents') # Find another name ?
     account.add_line('paid_subsidies', name=u'Subventions versées')
     account.add_edges('operating_costs', ['staff_costs', 'purchases_and_external_costs',
-                                          'financial_costs', 'contigents',
+                                          'financial_costs', 'contingents',
                                           'paid_subsidies'])
 
     # INVESTMENTS OPERATIONS
@@ -338,7 +344,6 @@ def make_city_account():
             tax_info_node = "%s_%s"%(tax, tax_info)
             account.add_line(tax_info_node, name=tax_info_name)
             account.add_edge(tax, tax_info_node)
-
 
     account.add_edges('taxation', ['home_tax', 'property_tax', 'land_property_tax',
                                    'additionnal_land_property_tax',

@@ -22,7 +22,7 @@ def get_response(filepath, encoding='utf-8'):
     response.body = body
     return response
 
-class CommuneFinanceParsingTestCase(unittest2.TestCase):
+class CommuneParsingTestCase(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('data/commune_2012_account.html')
 
@@ -40,7 +40,7 @@ class CommuneFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['staff_costs'], 52000.)
         self.assertEqual(data['purchases_and_external_costs'], 69000.)
         self.assertEqual(data['financial_costs'], 1000.)
-        self.assertEqual(data['contigents'], 65000.)
+        self.assertEqual(data['contingents'], 65000.)
         self.assertEqual(data['paid_subsidies'], 7000.)
         self.assertEqual(data['net_profit'], -4000.)
         self.assertEqual(data['investment_ressources'], 91000.)
@@ -91,6 +91,77 @@ class CommuneFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['business_network_tax_cuts_on_deliberation'], 0.)
         self.assertEqual(data['retail_land_tax_value'], 0.)
         self.assertEqual(data['retail_land_tax_cuts_on_deliberation'], 0.)
+
+class Commune2000ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/commune_2000_account.html', encoding='windows-1252')
+        self.data = {
+            'population': 116559,
+            'name': 'ORLEANS',
+            'operating_revenues': 154756 * 1e3,
+            'localtax': 72981 * 1e3,
+            'other_tax': 4549 * 1e3,
+            'allocation': 30959 * 1e3,
+            'operating_costs': 125548 * 1e3,
+            'staff_costs': 58592 * 1e3,
+            'purchases_and_external_costs': 27790 * 1e3,
+            'financial_costs': 4756 * 1e3,
+            'contingents': 1839 * 1e3,
+            'paid_subsidies': 23568 * 1e3,
+            'net_profit': 29208 * 1e3,
+            'home_tax_value': 19394 * 1e3,
+            'home_tax_rate': 0.1756,
+            'property_tax_value': 25575 * 1e3,
+            'property_tax_rate': 0.2440,
+            'land_property_tax_value': 66 * 1e3,
+            'land_property_tax_rate': 0.3313,
+            'business_tax_value': 26711 * 1e3,
+            'business_tax_rate': 0.1703,
+            'investment_ressources': 118468 * 1e3,
+            'loans': 30969 * 1e3,
+            'received_subsidies': 7837 * 1e3,
+            'fctva': 3014 * 1e3,
+            'returned_properties': 0,
+            'investments_usage': 125254 * 1e3,
+            'facilities_expenses': 50482 * 1e3,
+            'debt_repayments': 25686 * 1e3,
+            'costs_to_allocate': 2073 * 1e3,
+            'fixed_assets': 30466 * 1e3,
+            'residual_financing_capacity': 6786 * 1e3,
+            'thirdparty_balance': 1000,
+            'financing_capacity': 6787 * 1e3,
+            'global_profit': 22421 * 1e3,
+            'surplus': 24048 * 1e3,
+            'self_financing_capacity': 33096 * 1e3,
+            'debt_repayment_capacity': 7410 * 1e3,
+            'debt_at_end_year': 96199 * 1e3,
+            'debt_annual_costs': 29564  * 1e3,
+            'advances_from_treasury': 0,
+            'working_capital': 10927 * 1e3,
+        }
+
+    def test_parsing(self):
+        parser = CityParser('', 2000, '')
+        data = parser.parse(self.response)
+        for key, val in self.data.items():
+            self.assertAlmostEqual(data[key], val)
+
+class Commune2009ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/commune_2009_account.html', encoding='windows-1252')
+        self.data = {
+            'home_tax_basis': 137402 * 1e3,
+            'home_tax_rate': 0.2099,
+            'home_tax_value': 28841 * 1e3,
+            'home_tax_cuts_on_deliberation': 30475 * 1e3,
+            'business_tax_value': 0,
+            'business_tax_rate': 0,
+        }
+    def test_parsing(self):
+        parser = CityParser('', 2009, '')
+        data = parser.parse(self.response)
+        for key, val in self.data.items():
+            self.assertAlmostEqual(data[key], val)
 
 class EPCIFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
