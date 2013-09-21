@@ -17,21 +17,25 @@ class FinancialData(Item):
 
 class CityFinancialData(FinancialData):
    insee_code = Field()
-for line_name, _ in city_account.iterlines():
-    CityFinancialData.fields[line_name] = {}
+for line_name, line_attr in city_account.nodes.items():
+    if 'type' not in line_attr:
+        CityFinancialData.fields[line_name] = {}
 
 class EPCIFinancialData(FinancialData):
     siren = Field()
-for line_name, _ in epci_account.iterlines():
-    EPCIFinancialData.fields[line_name] = {}
+for line_name, line_attr in epci_account.nodes.items():
+    if 'type' not in line_attr:
+        EPCIFinancialData.fields[line_name] = {}
 
 class DepartmentFinancialData(FinancialData):
     insee_code = Field()
-for line_name, _ in department_account.iterlines():
-    DepartmentFinancialData.fields[line_name] = {}
+for line_name, line_attr in department_account.nodes.items():
+    if 'type' not in line_attr:
+        DepartmentFinancialData.fields[line_name] = {}
 
 class RegionFinancialData(FinancialData):
     insee_code = Field()
-for line_name, _ in region_account.iterlines():
-    RegionFinancialData.fields[line_name] = {}
+for line_name, line_attr in region_account.nodes.items():
+    if 'type' not in line_attr:
+        RegionFinancialData.fields[line_name] = {}
 

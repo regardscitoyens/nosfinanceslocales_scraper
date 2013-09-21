@@ -10,7 +10,6 @@ from .account_network import (
     region_account
 )
 
-
 def convert_value(val):
     """Remove crap from val string and then convert it into float"""
     val = val.replace(u'\xa0', '')\
@@ -33,25 +32,18 @@ def convert_value(val):
         print "none"
         return None
 
-
-
 class CityParser(object):
     """Parser of city html page"""
     zone_type = 'city'
     account = city_account
 
     table1_ix = 3
-    table2_ix = 4
 
     # In the table with financial data, the values we want to scrap are in 
     # the first columns, the name of the data is in the third column.
     finance_value_icol = 0
     finance_name_icol = 3
 
-    # In the table with tax data, the values can be in the first column and
-    # the fourth. The name of the data in third column.
-    tax_values_icol = [0, 4]
-    tax_name_icol = 3
     def __init__(self, insee_code, year, url):
         self.data = {'insee_code':insee_code,
                      'year': year,
@@ -108,8 +100,8 @@ class CityParser(object):
                     continue
             name = name_td[0]
             name = name.replace('dont', '').replace(':', '').replace('+', '').strip()
-            targets = self.account.find_node(name=name, type='accountline')
-            if targets:
+            targets = self.account.find_node(name=name)
+            if targets and 'type' not in self.account.nodes[targets[0]]:
                 target = targets[0]
                 try:
                     value = convert_value(tds[self.finance_value_icol]\
@@ -159,7 +151,7 @@ class After2008TaxParser(TaxParser):
             if len(tds) <= max(icol_value, self.tax_name_icol):
                 continue
             name = tds[self.tax_name_icol].select('./text()').extract()[0].strip()
-            targets = self.account.find_node(name=name, type='accountline')
+            targets = self.account.find_node(name=name)
             if targets:
                 target = targets[0]
                 str_val = tds[icol_value].select('./text()').extract()[0].strip()

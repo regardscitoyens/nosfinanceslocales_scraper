@@ -12,16 +12,16 @@ class AccountTestCase(unittest2.TestCase):
     def test_account(self):
         """Just test the instanciation"""
         account = Account()
-        account.add_line('localtax', name=u'Impôts Locaux')
-        account.add_line('other_tax', name=u'Autres impôts et taxes')
-        account.add_line('allocation', name=u'Dotation globale de fonctionnement')
-        account.add_section('operating_revenues_A', name=u'TOTAL DES PRODUITS DE FONCTIONNEMENT = A')
+        account.add_node('localtax', name=u'Impôts Locaux')
+        account.add_node('other_tax', name=u'Autres impôts et taxes')
+        account.add_node('allocation', name=u'Dotation globale de fonctionnement')
+        account.add_node('operating_revenues_A', name=u'TOTAL DES PRODUITS DE FONCTIONNEMENT = A', type='section')
         account.add_edges('operating_revenues_A', ['localtax', 'other_tax', 'allocation'])
 
     def test_find(self):
         account = Account()
-        account.add_line('localtax', name=u'Impôts Locaux', other=u'test')
-        account.add_line('localtax2', name=u'Impôts Locaux', other=u'test2')
+        account.add_node('localtax', name=u'Impôts Locaux', other=u'test')
+        account.add_node('localtax2', name=u'Impôts Locaux', other=u'test2')
         self.assertEqual(len(account.find_node(**{'name': u'Impôts Locaux'})), 2)
         self.assertEqual(len(account.find_node(**{'name': u'Impôts Locaux',
                                                   'other':u'test2'})), 1)

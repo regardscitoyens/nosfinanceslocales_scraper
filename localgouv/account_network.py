@@ -50,20 +50,13 @@ class Network(object):
         for node, node_attr in self.nodes.iteritems():
             append = True
             for attr_k, attr_v in attr.iteritems():
-                values = node_attr.get(attr_k)
-                if type(values) in [list, tuple]:
-                    append = False
-                    for value in values:
-                        if attr_v in value:
-                            append = True
+                node_attr_v = node_attr[attr_k] if attr_k in node_attr else None
+                if attr_k in node_attr and (attr_v == node_attr_v or attr_v in node_attr_v):
+                    pass
                 else:
-                    if attr_v not in values:
-                        append = False
-                if not append:
-                    break
+                    append = False
             if append:
                 matched_nodes.append(node)
-
         return matched_nodes
 
     def find_nearest_node(self, source, attr):
@@ -82,122 +75,227 @@ class Account(Network):
     TODO: add edge rules which ensure the relationship between account lines:
         for example, an account line can be the sum of its children.
     """
-    def add_line(self, node, **attr):
-        attr = attr or {}
-        attr.update(type="accountline")
-        self.add_node(node, **attr)
-
     def add_section(self, node, **attr):
         attr = attr or {}
         attr.update(type="section")
         self.add_node(node, **attr)
 
-    def add_lines(self, nodes):
-        for node, attr in nodes.items():
-            self.add_line(node, **attr)
-
     def add_relationship(self, node, r_nodes, operator):
         raise NotImplementedError
 
-    def iterlines(self):
-        for k, v in self.nodes.iteritems():
-            if 'type' in v and v['type'] == 'accountline':
-                yield (k, v)
+# TODO: use lower case to compare
+
+def add_operating_operations(account):
+    """Operating nodes"""
+    account.add_nodes({
+        'operatings_operations': {'name': u'OPERATIONS DE FONCTIONNEMENT', 'type': 'section'},
+        'operating_revenues': {'name': [u'TOTAL DES PRODUITS DE FONCTIONNEMENT = A', u"Total des produits de fonctionnement = A"]},
+        'other_tax': {'name': u"Autres impôts et taxes"},
+        'allocation': {'name': u"Dotation globale de fonctionnement"},
+        'operating_costs': {'name': [u"Total des charges de fonctionnement = B", u'TOTAL DES CHARGES DE FONCTIONNEMENT = B']},
+        'staff_costs': {'name': [u'Charge de personnel (montant net)', u'Charges de personnel']},
+        'purchases_and_external_costs': {'name': u'Achats et charges externes (montant net)'},
+        'financial_costs': {'name': u'Charges financières'},
+        'net_profit': {'name': [u"Résultat comptable = A - B", u'RESULTAT COMPTABLE = A - B = R']},
+    })
+
+    account.add_edge('root', 'operatings_operations')
+    account.add_edges('operatings_operations', ['net_profit', 'operating_revenues', 'operating_costs'])
+
+    account.add_edges('operating_revenues', ['other_tax', 'allocation'])
+
+    account.add_edges('operating_costs',
+                      ['staff_costs', 'purchases_and_external_costs',
+                       'financial_costs'])
+
+def add_investments_operations(account):
+    account.add_nodes({
+        'investments': {'name': u"OPERATIONS D'INVESTISSEMENT", 'type': 'section'},
+        'investment_ressources': {
+            'name': [u"TOTAL DES RESSOURCES D'INVESTISSEMENT = C",
+                      u"Total des ressources d'investissement budgétaires = C"]
+        },
+        'fctva': {'name': u"FCTVA"},
+        'received_subsidies': {
+            'name': [u"Subventions d'investissements reçues", u"Subventions reçues"]
+        },
+        'loans': {'name': [u"Emprunts souscrits",
+                           u"Emprunts bancaires et dettes assimilées"]},
+        'investments_usage': {
+            'name': [u"Total des emplois d'investissement budgétaires = D",
+                      u"TOTAL DES EMPLOIS D'INVESTISSEMENT = D"]
+        },
+        'debt_repayments': {
+            'name': [u"Remboursement en capital des emprunts",
+                     u"Remboursement d'emprunts et dettes assimilées"]
+        },
+        'residual_financing_capacity': {
+            'name': [u"Besoin de financement résiduel = D-C",
+                     u"Besoin ou capacité de financement Résiduel de la section d'investissement = D - C"]
+        },
+        'thirdparty_balance': {'name': [u"Solde des opérations pour compte de tiers",
+                                        u"Solde des opérations pour le compte de tiers"]},
+        'financing_capacity': {
+            'name': [u"Besoin de financement de la section d'investissement",
+                     u"= Besoin ou capacité de financement de la section d'investissement = E"]
+        },
+        'global_profit': {'name': [u"Résultat d'ensemble", u"Résultat d'ensemble = R - E"]},
+    })
+
+    account.add_edges('root', ['investments', 'global_profit'])
+    account.add_edges('investments', ['investment_ressources', 'fctva', 'loans',
+                                      'received_subsidies', 'investments_usage',
+                                      'debt_repayments', 'residual_investment_needs',
+                                      'thirdparty_balance', 'financing_capacity'])
+
+def add_debt(account):
+    account.add_nodes({
+        'liabilities': {'name': 'ENDETTEMENT', 'type': 'section'},
+        'debt_at_end_year': {'name': [u'encours des dettes bancaires et assimilées', u"Encours total de la dette au 31/12/N"]},
+        'debt_annual_costs': {'name': [u'Annuité de la dette', u"Annuité des dettes bancaires et assimilées"]},
+    })
+    account.add_edge('root', 'liabilities')
+    account.add_edges('liabilities', ['debt_at_end_year', 'debt_annual_costs'])
+    return account
+
+def add_taxation(account):
+    account.add_nodes({
+        'taxation': {'name': u'ELEMENTS DE FISCALITE LOCALE', 'type': 'section'},
+    })
+
+    account.add_edge('root', 'taxation')
+
+def add_city_taxation(account):
+    account.add_nodes({
+        'home_tax': {
+            'name': [u"Taxe d'habitation",
+                     u"Taxe d'habitation (y compris THLV)",
+                     u"Produits taxe d'habitation"],
+            'type': 'section'
+        },
+        'property_tax': {
+            'name': [u"Taxe foncière sur les propriétés bâties",
+                     u"Produits foncier bâti"],
+            'type': 'section'
+        },
+        'land_property_tax': {
+            'name': [u"Taxe foncière sur les propriétés non bâties",
+                    u"Produits foncier non bâti"],
+            'type': 'section'
+        },
+        'compensation_2010': {'name': u"Compensation-Relais 2010"},
+        'business_tax': {
+            'name': [u"Taxe professionnelle (hors produits écrêtés)",
+                     u"Taxe professionnelle (hors bases écrêtées)",
+                     u"Produits taxe professionnelle"],
+            'type': 'section'
+        },
+        'additionnal_land_property_tax': {
+            'name': u"Taxe additionnelle à la taxe foncière sur les propriétés non bâties",
+            'type': 'section'
+        },
+        'business_property_contribution': {
+            'name': u'Cotisation foncière des entreprises',
+            'type': 'section'
+        },
+        'business_profit_contribution': {
+            'name': u'Cotisation sur la valeur ajoutée des entreprises',
+            'type': 'section'
+        },
+        'business_network_tax': {
+            'name': u'Impositions forfaitaires sur les entreprises de réseau',
+            'type': 'section'
+        },
+        'retail_land_tax': {
+            'name': u'Taxe sur les surfaces commerciales',
+            'type': 'section'
+        },
+    })
+
+    account.add_edges('taxation',
+                      ['home_tax', 'property_tax', 'land_property_tax',
+                       'additionnal_land_property_tax', 'compensation_2010',
+                       'business_tax', 'business_property_contribution',
+                       'business_profit_contribution', 'business_network_tax',
+                        'retail_land_tax'])
+
+    tax_infos = ['basis', 'cuts_on_deliberation', 'value', 'rate']
+    tax_info_names = [u"Bases nettes imposées",
+                      u"Réductions de bases accordées sur délibérations",
+                      u"Produits des impôts locaux",
+                      u"Taux voté"]
+    for tax in ['home_tax', 'property_tax', 'land_property_tax', 'business_tax', 'additionnal_land_property_tax', 'business_property_contribution', 'business_profit_contribution', 'business_network_tax', 'retail_land_tax']:
+        for (tax_info, tax_info_name) in zip(tax_infos, tax_info_names):
+            tax_info_node = "%s_%s"%(tax, tax_info)
+            account.add_node(tax_info_node, name=tax_info_name)
+            account.add_edge(tax, tax_info_node)
+
+def add_self_financing(account):
+    account.add_nodes({
+        'self_financing': {'name': u'AUTOFINANCEMENT', 'type': 'section'},
+        'surplus': {'name': u'Excédent brut de fonctionnement'},
+        'debt_repayment_capacity': {'name': u"CAF nette du remboursement en capital des emprunts"},
+        'self_financing_capacity': {'name': [u"Capacité d'autofinancement = CAF",
+                                             u"Capacité d'autofinancement brute=CAF"]},
+    })
+    account.add_edge('root', 'self_financing')
+    account.add_edges('self_financing', ['self_financing_capacity', 'surplus',
+                                         'debt_repayment_capacity'])
 
 def make_base_account():
     # Base account for cities, epci, departments and regions
     account = Account()
-    account.add_section('root')
-    account.add_line('operating_revenues', name=u'TOTAL DES PRODUITS DE FONCTIONNEMENT = A')
-    account.add_line('operating_costs', name=u'TOTAL DES CHARGES DE FONCTIONNEMENT = B')
-    account.add_line('operatings_operations', name=u'OPERATIONS DE FONCTIONNEMENT')
-    account.add_line('net_profit', name=u'RESULTAT COMPTABLE = A - B = R')
+    account.add_node('root')
 
-    account.add_edges('operatings_operations', ['operating_revenues', 'operating_costs'])
-    account.add_edge('root', 'operatings_operations')
-    account.add_edge('root', 'net_profit')
-
-
-    account.add_section('taxation', name=u'ELEMENTS DE FISCALITE LOCALE')
-    account.add_edge('root', 'taxation')
+    add_operating_operations(account)
+    add_investments_operations(account)
+    add_debt(account)
+    add_taxation(account)
 
     return account
 
 def make_region_account():
     account = make_base_account()
 
-    account.add_lines({
-        'operating_revenues': {'name': u"Total des produits de fonctionnement = A"},
+    account.add_nodes({
         'operating_real_revenues': {'name': u"produits de fonctionnement réels"},
         'direct_tax': {'name': u"Impôts directs"},
         'refund_tax': {'name': u"Fiscalité reversée"},
-        'other_tax': {'name': u"Autres impôts et taxes"},
         'tipp': {'name': u"TIPP"},
-        'allocation': {'name': u"Dotation globale de fonctionnement"},
         'training_and_learning_allocation': {'name': u"Dotation d'apprentissage et de formation professionnelle"},
-        'realignment': {'name': u"Attributions de péréquation et de compensation"},
-        'operating_costs': {'name': u"Total des charges de fonctionnement = B"},
+        'realignment': {'name': [u"Attributions de péréquation et de compensation",
+                                 u"attributions de péréquation et de compensation"]},
         'operating_real_costs': {'name': u"charges de fonctionnement réelles"},
-        'staff_costs': {'name': 'Charge de personnel (montant net)'},
-        'purchases_and_external_costs': {'name': u'Achats et charges externes (montant net)'},
         'subsidies_and_contingents': {'name': u'Subventions et contingents'},
         'mandatory_contributions_and_stakes': {'name': u'contributions obligatoires et participations'},
         'subsidies': {'name': 'subventions'},
         'individual_aids': {'name': u'aides à la personne'},
-        'financial_costs': {'name': u'Charges financières'},
-        'net_profit': {'name': u"Résultat comptable = A - B"},
-        'self_financing_capacity': {'name': [u"Capacité d'autofinancement = CAF",
-                                             u"Capacité d'autofinancement brute=CAF"]},
     })
 
     account.add_edges('operating_revenues',
                       ['operating_real_revenues', 'direct_tax', 'refund_tax',
-                       'other_tax', 'tipp', 'allocation',
-                       'training_and_learning_allocation', 'realignment'])
+                       'tipp', 'training_and_learning_allocation', 'realignment'])
 
     account.add_edges('operating_costs',
-                      ['staff_costs', 'purchases_and_external_costs',
-                       'subsidies_and_contingents', 'mandatory_contributions_and_stakes',
-                       'subsidies', 'individual_aids', 'financial_costs',
-                       'operating_real_costs', 'self_financing_capacity'])
-
+                      ['subsidies_and_contingents', 'mandatory_contributions_and_stakes',
+                       'subsidies', 'individual_aids',
+                       'operating_real_costs', ])
 
     # INVESTMENTS
-    account.add_section('investments', name="OPERATIONS D'INVESTISSEMENT")
-    account.add_edge('root', 'investments')
-    account.add_lines({
-        'investment_ressources': {'name': u"Total des ressources d'investissement budgétaires = C"},
-        'fctva': {'name': u"FCTVA"},
-        'received_subsidies': {'name': u"Subventions d'investissements reçues"},
+    account.add_nodes({
         'sold_fixed_assets': {'name': u"Produits des cessions d'immobilisations"},
-        'loans': {'name': u"Emprunts souscrits"},
-        'investments_usage': {'name': u"Total des emplois d'investissement budgétaires = D"},
         'investments_direct_costs': {'name': u"Dépenses d'investissement directes"},
         'paid_subsidies': {'name': u"Subventions d'équipement versées"},
-        'debt_repayments': {'name': u"Remboursement en capital des emprunts"},
-        'residual_investment_needs': {'name': u"Besoin de financement résiduel = D-C"},
-        'investment_needs': {'name': u"Besoin de financement de la section d'investissement"},
-        'thirdparty_balance': {'name': u"Solde des opérations pour compte de tiers"},
-        'debt_at_end_year': {'name': u'encours des dettes bancaires et assimilées'},
-        'debt_annual_costs': {'name': u'Annuité des dettes bancaires et assimilées'},
-        'global_profit': {'name': u"Résultat d'ensemble"},
     })
 
-    account.add_edges('investment_ressources',
-                      ['fctva', 'received_subsidies', 'sold_fixed_assets', 'loans'])
-    account.add_edges('investments_usage', ['thirdparty_balance', 'investment_needs',
-                                            'residual_investment_needs',
-                                            'investments_direct_costs',
-                                            'paid_subsidies', 'debt_repayments',
-                                            'global_profit'])
-    account.add_edges('investments', ['investment_ressources', 'investments_usage'])
+    account.add_edges('investments', ['sold_fixed_assets', 'investments_direct_costs'
+                                      'paid_subsidies'])
 
-    account.add_section('liabilities', name=u'ENDETTEMENT')
-    account.add_edge('root', 'liabilities')
-    account.add_edges('liabilities', ['debt_at_end_year', 'debt_annual_costs'])
-
-    account.add_line('business_profit_contribution', name=u"Cotisation Valeur Ajoutée des Entreprises")
-    account.add_line('business_network_tax', name=u"Imposition forfaitaire sur les entreprises de réseau")
+    # TAXES
+    account.add_nodes({
+        'business_profit_contribution': {'name': u"Cotisation Valeur Ajoutée des Entreprises"},
+        'business_network_tax': {'name': u"Imposition forfaitaire sur les entreprises de réseau"},
+    })
     account.add_edges('taxation', ['business_profit_contribution',
                                    'business_network_tax'])
 
@@ -208,23 +306,20 @@ region_account = make_region_account()
 def make_department_account():
     # TODO: edges are not well defined, review them.
     account = make_region_account()
+    add_self_financing(account)
 
-    account.add_line('advertisement_tax', name=u"taxe départementale de publicité foncière et droits d'enregistrement")
-    account.add_line('allocation', name=u"dotation globale de fonctionnement")
-    account.add_line('realignment', name=u"attributions de péréquation et de compensation")
-    account.add_line('thirdparty_balance', name=u"Solde des opérations pour compte de tiers")
-    account.add_line('allocation_and_stake', name=u"Dotations et participations")
+    account.add_nodes({
+        'advertisement_tax': {'name': u"taxe départementale de publicité foncière et droits d'enregistrement"},
+        'allocation_and_stake': {'name': u"Dotations et participations"},
+        'pch': {'name': u'PCH'},
+        'apa': {'name': u'APA'},
+        'rsa': {'name': u'RSA'},
+        'accomodation_costs': {'name': u"frais de séjour et d'hébergement"},
+        'property_tax': {'name': u"Taxe foncière sur les propriétés bâties"},
+    })
     account.add_edges('operating_revenues',
                       ['advertisement_tax', 'allocation_and_stake',])
-
-    account.add_line('pch', name=u'PCH')
-    account.add_line('apa', name=u'APA')
-    account.add_line('rsa', name=u'RSA')
-    account.add_line('accomodation_costs', name=u"frais de séjour et d'hébergement")
     account.add_edges('operating_costs', ['pch', 'apa', 'rsa', 'accomodation_costs'])
-
-    # TAXES
-    account.add_line('property_tax', name=u"Taxe foncière sur les propriétés bâties")
     account.add_edge('taxation', 'property_tax')
 
     return account
@@ -233,121 +328,32 @@ department_account = make_department_account()
 
 def make_city_account():
     """Create city's account: note that there are little differences between fiscal
-    years...
-    All is based on info from http://www.collectivites-locales.gouv.fr/"""
+    years..."""
 
     account = make_base_account()
+    add_self_financing(account)
 
-    # OPERATINGS OPERATIONS
-    ## REVENUES
-    account.add_line('localtax', name=u'Impôts Locaux')
-    account.add_line('other_tax', name=u'Autres impôts et taxes')
-    account.add_line('allocation', name=u'Dotation globale de fonctionnement')
-    account.add_edges('operating_revenues', ['localtax', 'other_tax', 'allocation'])
+    account.add_nodes({
+        'localtax': {'name': u'Impôts Locaux'},
+        'other_tax': {'name': u'Autres impôts et taxes'},
+        'contingents': {'name': u'Contingents'}, # Find another name ?
+        'paid_subsidies': {'name': u'Subventions versées'},
+        'returned_properties': {'name': u"Retour de biens affectés, concédés, ..."},
+        'facilities_expenses': {'name': u"Dépenses d'équipement"},
+        'costs_to_allocate': {'name': u"Charges à répartir"},
+        'fixed_assets': {'name': u"Immobilisations affectées, concédées, ..."},
+        'advances_from_treasury': {'name': u'Avances du Trésor au 31/12/N'},
+        'working_capital': {'name': u'FONDS DE ROULEMENT'},
+    })
+    account.add_edges('operating_revenues', ['localtax', 'other_tax'])
+    account.add_edges('operating_costs', ['contingents', 'paid_subsidies'])
+    account.add_edge('investments', 'returned_properties')
+    account.add_edge('liabilities', 'advances_from_treasury')
+    account.add_edges('investments_usage',
+                      ['facilities_expenses', 'costs_to_allocate', 'fixed_assets'])
+    account.add_edge('root', 'working_capital')
 
-    ## EXPENSES
-    account.add_line('staff_costs', name=u'Charges de personnel')
-    account.add_line('purchases_and_external_costs', name=u'Achats et charges externes')
-    account.add_line('financial_costs', name=u'Charges financières')
-    account.add_line('contingents', name=u'Contingents') # Find another name ?
-    account.add_line('paid_subsidies', name=u'Subventions versées')
-    account.add_edges('operating_costs', ['staff_costs', 'purchases_and_external_costs',
-                                          'financial_costs', 'contingents',
-                                          'paid_subsidies'])
-
-    # INVESTMENTS OPERATIONS
-    account.add_section('investments', name="OPERATIONS D'INVESTISSEMENT")
-    account.add_edge('root', 'investments')
-    ## INVESTMENTS RESSOURCES
-    account.add_line('loans', name=u"Emprunts bancaires et dettes assimilées")
-    account.add_line('received_subsidies', name=u"Subventions reçues")
-    account.add_line('fctva', name=u"FCTVA") # What is FCTVA ?
-    account.add_line('returned_properties', name=u"Retour de biens affectés, concédés, ...")
-    account.add_line('investment_ressources', name=u"TOTAL DES RESSOURCES D'INVESTISSEMENT = C")
-    account.add_edges('investment_ressources', ['loans', 'received_subsidies',
-                                                'fctva', 'returned_properties'])
-
-    ## INVESTMENTS USAGE
-    account.add_line('facilities_expenses', name=u"Dépenses d'équipement")
-    account.add_line('debt_repayments', name=u"Remboursement d'emprunts et dettes assimilées")
-    account.add_line('costs_to_allocate', name=u"Charges à répartir")
-    account.add_line('fixed_assets', name=u"Immobilisations affectées, concédées, ...")
-    account.add_line('residual_financing_capacity', name=u"Besoin ou capacité de financement Résiduel de la section d'investissement = D - C")
-    account.add_line('thirdparty_balance',
-                     name=u"Solde des opérations pour le compte de tiers")
-    account.add_line('financing_capacity', name=u"= Besoin ou capacité de financement de la section d'investissement = E")
-    account.add_line('investments_usage', name=u"TOTAL DES EMPLOIS D'INVESTISSEMENT = D")
-    account.add_edges('investments_usage', ['facilities_expenses', 'debt_repayments',
-                                            'costs_to_allocate', 'fixed_assets',
-                                            'residual_financing_capacity',
-                                            'thirdparty_balance', 'financing_capacity'])
-
-    account.add_edges('investments', ['investment_ressources', 'investments_usage'])
-    account.add_line('global_profit', name=u"Résultat d'ensemble = R - E")
-    account.add_edge('root', 'global_profit')
-
-    ## SELF-FINANCING
-    account.add_section('self_financing', name=u'AUTOFINANCEMENT')
-    account.add_edge('root', 'self_financing')
-    account.add_line('surplus', name=u'Excédent brut de fonctionnement')
-    account.add_line('self_financing_capacity', name=u"Capacité d'autofinancement = CAF")
-    account.add_line('debt_repayment_capacity', name=u"CAF nette du remboursement en capital des emprunts")
-    account.add_edges('self_financing', ['surplus', 'self_financing_capacity',
-                                         'debt_repayment_capacity'])
-
-    ## LIABILITIES
-    account.add_section('liabilities', name=u'ENDETTEMENT')
-    account.add_edge('liabilities', 'self_financing')
-    account.add_edge('root', 'liabilities')
-    account.add_line('debt_at_end_year', name=u'Encours total de la dette au 31/12/N')
-    account.add_line('debt_annual_costs', name=u'Annuité de la dette')
-    account.add_line('advances_from_treasury', name=u'Avances du Trésor au 31/12/N')
-    account.add_line('working_capital', name=u'FONDS DE ROULEMENT')
-    account.add_edges('liabilities', ['debt_at_end_year', 'debt_annual_costs',
-                                      'advances_from_treasury', 'working_capital'])
-
-    # TAXES
-    account.add_section('taxation', name=u'ELEMENTS DE FISCALITE DIRECTE LOCALE')
-    account.add_edge('root', 'taxation')
-    account.add_line('home_tax', name=[u"Taxe d'habitation (y compris THLV)",
-                                       u"Produits taxe d'habitation"])
-    account.add_line('property_tax', name=[u"Taxe foncière sur les propriétés bâties",
-                                           u"Produits foncier bâti"])
-    account.add_line('land_property_tax', name=[u"Taxe foncière sur les propriétés non bâties", u"Produits foncier non bâti"])
-    account.add_line('compensation_2010', name=u"Compensation-Relais 2010")
-    account.add_line('business_tax', name=[u"Taxe professionnelle (hors produits écrêtés)",
-                                           u"Taxe professionnelle (hors bases écrêtées)",
-                                           u"Produits taxe professionnelle"])
-    account.add_line('additionnal_land_property_tax', name=u"Taxe additionnelle à la taxe foncière sur les propriétés non bâties")
-    account.add_line('business_property_contribution', name=u'Cotisation foncière des entreprises')
-    account.add_edges('taxation', ['home_tax', 'property_tax', 'land_property_tax',
-                                   'additionnal_land_property_tax', 'compensation_2010',
-                                   'business_tax', 'business_property_contribution'])
-
-    ## TAX REVENUES
-    account.add_section('allocation_tax_revenues', name=u'Les produits des impôts de répartition')
-    account.add_edge('taxation', 'allocation_tax_revenues')
-    account.add_line('business_profit_contribution', name=u'Cotisation sur la valeur ajoutée des entreprises')
-    account.add_line('business_network_tax', name=u'Impositions forfaitaires sur les entreprises de réseau')
-    account.add_line('retail_land_tax', name=u'Taxe sur les surfaces commerciales')
-    account.add_edges('allocation_tax_revenues', ['business_profit_contribution',
-                                                  'business_network_tax',
-                                                  'retail_land_tax'])
-
-    tax_infos = ['basis', 'cuts_on_deliberation', 'value', 'rate']
-    tax_info_names = [u"Bases nettes imposées",
-                      u"Réductions de bases accordées sur délibérations",
-                      u"Produits des impôts locaux",
-                      u"Taux voté"]
-    for tax in ['home_tax', 'property_tax', 'land_property_tax', 'business_tax', 'additionnal_land_property_tax', 'business_property_contribution', 'business_profit_contribution', 'business_network_tax', 'retail_land_tax']:
-        for (tax_info, tax_info_name) in zip(tax_infos, tax_info_names):
-            tax_info_node = "%s_%s"%(tax, tax_info)
-            account.add_line(tax_info_node, name=tax_info_name)
-            account.add_edge(tax, tax_info_node)
-
-    account.add_edges('taxation', ['home_tax', 'property_tax', 'land_property_tax',
-                                   'additionnal_land_property_tax',
-                                   'allocation_tax_revenues'])
+    add_city_taxation(account)
 
     return account
 
@@ -355,7 +361,7 @@ city_account = make_city_account()
 
 def make_epci_account():
     account = make_city_account()
-    account.add_line('tax_refund', name=u'Reversement de fiscalité')
+    account.add_node('tax_refund', name=u'Reversement de fiscalité')
     account.add_edge('operating_revenues', 'tax_refund')
     account.nodes['business_property_contribution']['name'] = u'Cotisation foncière des entreprises ('
     account.nodes['business_profit_contribution']['name'] = u'Cotisation sur la valeur ajoutée des entreprises (tous régimes fiscaux confondus)'

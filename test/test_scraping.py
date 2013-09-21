@@ -157,6 +157,7 @@ class Commune2009ParsingTestCase(unittest2.TestCase):
             'business_tax_value': 0,
             'business_tax_rate': 0,
         }
+
     def test_parsing(self):
         parser = CityParser('', 2009, '')
         data = parser.parse(self.response)
@@ -183,6 +184,7 @@ class EPCIFinanceParsingTestCase(unittest2.TestCase):
         self.assertAlmostEqual(data['home_tax_rate'], 0.023400)
         self.assertEqual(data['home_tax_cuts_on_deliberation'], 33000)
 
+"""
 class DepartmentFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('data/department_2012_account.html',
@@ -224,6 +226,6 @@ class RegionFinanceParsingTestCase(unittest2.TestCase):
         # test data parsed from second table
         self.assertEqual(data['business_profit_contribution_value'], 64681000)
         self.assertEqual(data['business_profit_contribution_cuts_on_deliberation'], 288000)
-
+"""
 if __name__ == '__main__':
     unittest2.main()
