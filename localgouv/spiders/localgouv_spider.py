@@ -35,9 +35,9 @@ class LocalGouvFinanceSpider(BaseSpider):
         self.start_urls = []
         if zone_type == 'city' or zone_type == 'all':
             self.start_urls += self.get_commune_urls(year)
-        if zone_type == 'dep' or zone_type == 'all':
+        if zone_type == 'department' or zone_type == 'all':
             self.start_urls += self.get_dep_urls(year)
-        if zone_type == 'reg' or zone_type == 'all':
+        if zone_type == 'region' or zone_type == 'all':
             self.start_urls += self.get_reg_urls(year)
         if zone_type == 'epci' or zone_type == 'all':
             self.start_urls += self.get_epci_urls(year)

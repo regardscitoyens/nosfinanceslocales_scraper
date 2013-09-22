@@ -167,7 +167,10 @@ def add_tax_infos(account, taxes):
     for tax in taxes:
         for (tax_info, tax_info_name) in tax_infos.items():
             tax_info_node = "%s_%s"%(tax, tax_info)
-            account.add_node(tax_info_node, name=tax_info_name)
+            node_name = account.nodes[tax]['name']
+            node_name = node_name if type(node_name) in [str, unicode] \
+                                  else node_name[0]
+            account.add_node(tax_info_node, name="%s de la %s"%(tax_info_name, node_name))
             account.add_edge(tax, tax_info_node)
 
 
