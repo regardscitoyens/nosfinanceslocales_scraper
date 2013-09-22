@@ -182,7 +182,9 @@ def add_taxation(account):
             'name': [u"Taxe professionnelle",
                      u"Taxe professionnelle (hors produits écrêtés)",
                      u"Taxe professionnelle (hors bases écrêtées)",
-                     u"Produits taxe professionnelle"],
+                     u"Produits taxe professionnelle",
+                     u"Taxe professionnelle (",
+                     u'Taxe professionnelle (fiscalité additionnelle)'],
             'type': 'section'
         },
         'business_profit_contribution': {
@@ -223,13 +225,18 @@ def add_city_taxation(account):
                      u"Produits taxe d'habitation"],
             'type': 'section'
         },
-        'compensation_2010': {'name': u"Compensation-Relais 2010"},
+        'compensation_2010': {
+            'name': [u"Compensation-Relais 2010", u"Compensation-Relais"],
+            'type': 'section'
+        },
         'additionnal_land_property_tax': {
             'name': u"Taxe additionnelle à la taxe foncière sur les propriétés non bâties",
             'type': 'section'
         },
         'business_property_contribution': {
-            'name': u'Cotisation foncière des entreprises',
+            'name': [u'Cotisation foncière des entreprises',
+                     u'Cotisation foncière des entreprises (',
+                     u"Cotisation foncière des entreprises au profit de l'Etat en 2010 ("],
             'type': 'section'
         },
         'retail_land_tax': {
@@ -322,7 +329,8 @@ def make_department_account():
         'apa': {'name': u'APA'},
         'rsa': {'name': u'RSA'},
         'accomodation_costs': {'name': u"frais de séjour et d'hébergement"},
-        'compensation_2010': {'name': u"Compensation-Relais 2010", 'type': 'section'},
+        'compensation_2010': {'name': u"Compensation-Relais 2010",
+                              'type': 'section'},
         'home_tax': {
             'name': [u"Taxe d'habitation",
                      u"Taxe d'habitation (y compris THLV)",
@@ -373,11 +381,18 @@ def make_city_account():
 city_account = make_city_account()
 
 def make_epci_account():
-    account = make_city_account()
-    account.add_node('tax_refund', name=u'Reversement de fiscalité')
-    account.add_edge('operating_revenues', 'tax_refund')
-    account.nodes['business_property_contribution']['name'] = u'Cotisation foncière des entreprises ('
-    account.nodes['business_profit_contribution']['name'] = u'Cotisation sur la valeur ajoutée des entreprises (tous régimes fiscaux confondus)'
+    account = make_base_account()
+    add_city_taxation(account)
+    add_self_financing(account)
+    account.add_nodes({
+        'tax_refund': {'name': u'Reversement de fiscalité'},
+        'localtax': {'name': u'Impôts Locaux'},
+        'other_tax': {'name': u'Autres impôts et taxes'},
+        'paid_subsidies': {'name': u'Subventions versées'},
+        'facilities_expenses': {'name': u"Dépenses d'équipement"},
+    })
+    account.add_edges('operating_revenues', ['tax_refund', 'localtax', 'other_tax'])
+    account.add_edges('operating_costs', ['paid_subsidies'])
     return account
 
 epci_account = make_epci_account()

@@ -217,7 +217,12 @@ class EPCIParser(CityParser):
         return int(pop.replace(' ', ''))
 
     def taxes(self, hxs):
-        return EPCITaxParser(self.account).parse(hxs)
+        if int(self.data['year']) < 2009:
+            return EPCI2008TaxParser(self.account).parse(hxs)
+        elif int(self.data['year']) < 2011:
+            return EPCI2010TaxParser(self.account).parse(hxs)
+        else:
+            return EPCITaxParser(self.account).parse(hxs)
 
 class EPCITaxParser(After2008TaxParser):
     basis = ['basis', 0, 4, 11, 2, False]
@@ -226,6 +231,22 @@ class EPCITaxParser(After2008TaxParser):
     rate = ['rate', 3, 13, 20, 2, True]
     repartition_cuts_on_deliberation = None
     repartition_value = ['value', 0, 22, 25, 2, False]
+
+class EPCI2010TaxParser(After2008TaxParser):
+    basis = ['basis', 0, 4, 10, 2, False]
+    cuts_on_deliberation = ['cuts_on_deliberation', 3, 4, 10, 2, False]
+    value = ['value', 0, 12, 18, 2, False]
+    rate = ['rate', 3, 12, 18, 2, True]
+    repartition_cuts_on_deliberation = None
+    repartition_value = ['value', 0, 18, 21, 2, False]
+
+class EPCI2008TaxParser(After2008TaxParser):
+    basis = ['basis', 0, 4, 9, 1, False]
+    cuts_on_deliberation = None
+    value = ['value', 0, 12, 18, 2, False]
+    rate = ['rate', 3, 12, 18, 2, True]
+    repartition_cuts_on_deliberation = None
+    repartition_value = None
 
 class DepartmentParser(CityParser):
     zone_type = 'department'

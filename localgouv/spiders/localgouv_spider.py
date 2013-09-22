@@ -77,9 +77,9 @@ class LocalGouvFinanceSpider(BaseSpider):
         data = xls.parse('Composition communale des EPCI')
         data['siren'] = data[u'Établissement public à fiscalité propre'][1:]
         data = data.groupby('siren', as_index=False).first()
-        data['dep'] = data[u'Département commune'].apply(lambda r: ('0%s'%r)[:3])
+        data['dep'] = data[u'Département commune'].apply(get_dep_code_from_com_code)
         baseurl = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s"%(self.domain, str(year))
-        return [baseurl%row for __, row in data.iterrows()][1:]
+        return [baseurl%row for __, row in data.iterrows()][-10:]
 
     def get_commune_urls(self, year):
         """
@@ -157,21 +157,24 @@ def uniformize_code(df, column):
         return ("00%s"%code)[-3:]
     return df[column].apply(_uniformize_code)
 
+
+# Weird thing: department is not the same between insee data and gouverment's
+# site for DOM.
+# GUADELOUPE: 971 -> 101
+# MARTINIQUE: 972 -> 103
+# GUYANE:     973 -> 102
+# REUNION:    974 -> 104
+DOM_DEP_MAPPING = {
+    '971': '101',
+    '972': '103',
+    '973': '102',
+    '974': '104',
+}
 def convert_dom_code(df, column='DEP'):
-    # Weird thing: department is not the same between insee data and gouverment's
-    # site for DOM.
-    # GUADELOUPE: 971 -> 101
-    # MARTINIQUE: 972 -> 103
-    # GUYANE:     973 -> 102
-    # REUNION:    974 -> 104
-    def convert_dep(code):
-        return {
-            '971': '101',
-            '972': '103',
-            '973': '102',
-            '974': '104',
-        }.get(code, code)
-    return df[column].apply(convert_dep)
+    return df[column].apply(lambda code: DOM_DEP_MAPPING.get(code, code))
+
+def get_dep_code_from_com_code(com):
+    return DOM_DEP_MAPPING.get(str(com[:3]), ('0%s'%com)[:2])
 
 def convert_city(row):
     # Another strange thing, DOM cities have an insee_code on 2 digits in the

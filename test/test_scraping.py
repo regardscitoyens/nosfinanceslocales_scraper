@@ -184,6 +184,43 @@ class EPCIFinanceParsingTestCase(unittest2.TestCase):
         self.assertAlmostEqual(data['home_tax_rate'], 0.023400)
         self.assertEqual(data['home_tax_cuts_on_deliberation'], 33000)
 
+        for key in ['property_tax_basis', 'property_tax_value',
+                    'home_tax_value', 'property_tax_rate', 'home_tax_rate',
+                    'business_property_contribution_basis',
+                    'business_property_contribution_cuts_on_deliberation']:
+            self.assertTrue(key in data)
+
+class EPCIFinance2010ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/epci_2010_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = EPCIParser('', 2010, '')
+        data = parser.parse(self.response)
+        for key in ['property_tax_basis', 'property_tax_value',
+                    'home_tax_value', 'property_tax_rate', 'home_tax_rate',
+                    'home_tax_cuts_on_deliberation', 'home_tax_basis',
+                    'business_property_contribution_basis',
+                    'business_property_contribution_cuts_on_deliberation'
+                    ]:
+            self.assertTrue(key in data)
+
+class EPCIFinance2008ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/epci_2008_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = EPCIParser('', 2008, '')
+        data = parser.parse(self.response)
+        for key in ['property_tax_basis', 'property_tax_value',
+                    'home_tax_value', 'property_tax_rate', 'home_tax_rate',
+                    'home_tax_basis', 'business_tax_value', 'business_tax_rate',
+                    'business_tax_basis']:
+            print key
+            self.assertTrue(key in data)
+
 class DepartmentFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('data/department_2012_account.html',
