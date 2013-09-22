@@ -79,7 +79,7 @@ class LocalGouvFinanceSpider(BaseSpider):
         data = data.groupby('siren', as_index=False).first()
         data['dep'] = data[u'Département commune'].apply(get_dep_code_from_com_code)
         baseurl = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s"%(self.domain, str(year))
-        return [baseurl%row for __, row in data.iterrows()][-10:]
+        return [baseurl%row for __, row in data.iterrows()][1:]
 
     def get_commune_urls(self, year):
         """
