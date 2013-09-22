@@ -250,7 +250,7 @@ def add_city_taxation(account):
                        'additionnal_land_property_tax', 'compensation_2010',
                        'business_property_contribution', 'retail_land_tax'])
 
-    add_tax_infos(account, ['home_tax', 'property_tax', 'land_property_tax', 'additionnal_land_property_tax', 'business_property_contribution', 'retail_land_tax'])
+    add_tax_infos(account, ['home_tax', 'property_tax', 'land_property_tax', 'additionnal_land_property_tax', 'business_property_contribution', 'retail_land_tax', 'compensation_2010'])
 
 def add_self_financing(account):
     account.add_nodes({
