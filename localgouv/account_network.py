@@ -145,8 +145,8 @@ def add_investments_operations(account):
     account.add_edges('root', ['investments', 'global_profit'])
     account.add_edges('investments', ['investment_ressources', 'fctva', 'loans',
                                       'received_subsidies', 'investments_usage',
-                                      'debt_repayments', 'residual_investment_needs',
-                                      'thirdparty_balance', 'financing_capacity'])
+                                      'debt_repayments', 'thirdparty_balance',
+                                      'financing_capacity'])
 
 def add_debt(account):
     account.add_nodes({
@@ -158,19 +158,37 @@ def add_debt(account):
     account.add_edges('liabilities', ['debt_at_end_year', 'debt_annual_costs'])
     return account
 
+def add_tax_infos(account, taxes):
+    tax_infos = {'basis': u"Bases nettes imposées",
+                 'cuts_on_deliberation': u"Réductions de bases accordées sur délibérations",
+                 'value': u"Produits des impôts locaux",
+                 'rate': u"Taux voté"}
+
+    for tax in taxes:
+        for (tax_info, tax_info_name) in tax_infos.items():
+            tax_info_node = "%s_%s"%(tax, tax_info)
+            account.add_node(tax_info_node, name=tax_info_name)
+            account.add_edge(tax, tax_info_node)
+
+
 def add_taxation(account):
     account.add_nodes({
         'taxation': {'name': u'ELEMENTS DE FISCALITE LOCALE', 'type': 'section'},
-    })
-
-    account.add_edge('root', 'taxation')
-
-def add_city_taxation(account):
-    account.add_nodes({
-        'home_tax': {
-            'name': [u"Taxe d'habitation",
-                     u"Taxe d'habitation (y compris THLV)",
-                     u"Produits taxe d'habitation"],
+        'business_tax': {
+            'name': [u"Taxe professionnelle",
+                     u"Taxe professionnelle (hors produits écrêtés)",
+                     u"Taxe professionnelle (hors bases écrêtées)",
+                     u"Produits taxe professionnelle"],
+            'type': 'section'
+        },
+        'business_profit_contribution': {
+            'name': [u'Cotisation sur la valeur ajoutée des entreprises',
+                     u'Cotisation Valeur Ajoutée des Entreprises'],
+            'type': 'section'
+        },
+        'business_network_tax': {
+            'name': [u'Impositions forfaitaires sur les entreprises de réseau',
+                     u'Imposition forfaitaire sur les entreprises de réseau'],
             'type': 'section'
         },
         'property_tax': {
@@ -183,27 +201,31 @@ def add_city_taxation(account):
                     u"Produits foncier non bâti"],
             'type': 'section'
         },
-        'compensation_2010': {'name': u"Compensation-Relais 2010"},
-        'business_tax': {
-            'name': [u"Taxe professionnelle (hors produits écrêtés)",
-                     u"Taxe professionnelle (hors bases écrêtées)",
-                     u"Produits taxe professionnelle"],
+    })
+
+    account.add_edge('root', 'taxation')
+    account.add_edges('taxation', ['business_tax', 'business_profit_contribution',
+                                   'business_network_tax', 'property_tax',
+                                   'land_property_tax'])
+    add_tax_infos(account, ['business_tax', 'business_profit_contribution',
+                            'business_network_tax', 'property_tax',
+                            'land_property_tax'])
+
+def add_city_taxation(account):
+    account.add_nodes({
+        'home_tax': {
+            'name': [u"Taxe d'habitation",
+                     u"Taxe d'habitation (y compris THLV)",
+                     u"Produits taxe d'habitation"],
             'type': 'section'
         },
+        'compensation_2010': {'name': u"Compensation-Relais 2010"},
         'additionnal_land_property_tax': {
             'name': u"Taxe additionnelle à la taxe foncière sur les propriétés non bâties",
             'type': 'section'
         },
         'business_property_contribution': {
             'name': u'Cotisation foncière des entreprises',
-            'type': 'section'
-        },
-        'business_profit_contribution': {
-            'name': u'Cotisation sur la valeur ajoutée des entreprises',
-            'type': 'section'
-        },
-        'business_network_tax': {
-            'name': u'Impositions forfaitaires sur les entreprises de réseau',
             'type': 'section'
         },
         'retail_land_tax': {
@@ -215,20 +237,9 @@ def add_city_taxation(account):
     account.add_edges('taxation',
                       ['home_tax', 'property_tax', 'land_property_tax',
                        'additionnal_land_property_tax', 'compensation_2010',
-                       'business_tax', 'business_property_contribution',
-                       'business_profit_contribution', 'business_network_tax',
-                        'retail_land_tax'])
+                       'business_property_contribution', 'retail_land_tax'])
 
-    tax_infos = ['basis', 'cuts_on_deliberation', 'value', 'rate']
-    tax_info_names = [u"Bases nettes imposées",
-                      u"Réductions de bases accordées sur délibérations",
-                      u"Produits des impôts locaux",
-                      u"Taux voté"]
-    for tax in ['home_tax', 'property_tax', 'land_property_tax', 'business_tax', 'additionnal_land_property_tax', 'business_property_contribution', 'business_profit_contribution', 'business_network_tax', 'retail_land_tax']:
-        for (tax_info, tax_info_name) in zip(tax_infos, tax_info_names):
-            tax_info_node = "%s_%s"%(tax, tax_info)
-            account.add_node(tax_info_node, name=tax_info_name)
-            account.add_edge(tax, tax_info_node)
+    add_tax_infos(account, ['home_tax', 'property_tax', 'land_property_tax', 'additionnal_land_property_tax', 'business_property_contribution', 'retail_land_tax'])
 
 def add_self_financing(account):
     account.add_nodes({
@@ -245,7 +256,7 @@ def add_self_financing(account):
 def make_base_account():
     # Base account for cities, epci, departments and regions
     account = Account()
-    account.add_node('root')
+    account.add_node('root', type='section')
 
     add_operating_operations(account)
     add_investments_operations(account)
@@ -288,16 +299,8 @@ def make_region_account():
         'paid_subsidies': {'name': u"Subventions d'équipement versées"},
     })
 
-    account.add_edges('investments', ['sold_fixed_assets', 'investments_direct_costs'
+    account.add_edges('investments', ['sold_fixed_assets', 'investments_direct_costs',
                                       'paid_subsidies'])
-
-    # TAXES
-    account.add_nodes({
-        'business_profit_contribution': {'name': u"Cotisation Valeur Ajoutée des Entreprises"},
-        'business_network_tax': {'name': u"Imposition forfaitaire sur les entreprises de réseau"},
-    })
-    account.add_edges('taxation', ['business_profit_contribution',
-                                   'business_network_tax'])
 
     return account
 

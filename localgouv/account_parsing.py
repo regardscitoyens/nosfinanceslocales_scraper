@@ -292,9 +292,14 @@ class RegionParser(DepartmentParser):
         return name.split('SITUATION FINANCIERE de la ')[1].strip()
 
     def taxes(self, hxs):
-        return RegTaxParser(self.account, table_ix=6, tax_values_icol=(0,4), tax_name_icol=1).parse(hxs)
+        if int(self.data['year']) == 2008:
+            return RegTaxParser2008(self.account).parse(hxs)
+        elif int(self.data['year']) < 2011:
+            return RegTaxParser20092010(self.account).parse(hxs)
+        else:
+            return RegTaxParserAfter2011(self.account, table_ix=6, tax_values_icol=(0,4), tax_name_icol=1).parse(hxs)
 
-class RegTaxParser(DepTaxParser):
+class RegTaxParserAfter2011(DepTaxParser):
     def tax_basis(self, hxs):
         return {}
 
@@ -310,5 +315,48 @@ class RegTaxParser(DepTaxParser):
     def repartition_taxes(self, hxs):
         return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 6, 8)
 
+class RegTaxParser20092010(DepTaxParser):
+    def __init__(self, account):
+        self.account = account
+        self.table_ix=6
+        self.tax_values_icol=(0,4)
+        self.tax_name_icol=3
 
+    def tax_basis(self, hxs):
+        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 7)
+
+    def tax_cuts_on_deliberation(self, hxs):
+        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 7)
+
+    def tax_revenues(self, hxs):
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 8, 12)
+
+    def tax_rates(self, hxs):
+        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 8, 12, is_percent=True)
+
+    def repartition_taxes(self, hxs):
+        return {}
+
+class RegTaxParser2008(RegTaxParser20092010):
+    def __init__(self, account):
+        self.account = account
+        self.table_ix=6
+        self.tax_values_icol=(0,4)
+        self.tax_name_icol=2
+
+    def tax_revenues(self, hxs):
+        self.tax_name_icol = 3
+        data = self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 9, 13)
+        self.tax_name_icol = 2
+        return data
+
+    def tax_rates(self, hxs):
+        self.tax_name_icol = 3
+        data = self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 9, 13, is_percent=True)
+        self.tax_name_icol = 2
+        return data
+
+    def repartition_taxes(self, hxs):
+        # TODO: add parsing of cuts_on_deliberation
+        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 11, 13)
 

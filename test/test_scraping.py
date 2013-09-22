@@ -184,7 +184,6 @@ class EPCIFinanceParsingTestCase(unittest2.TestCase):
         self.assertAlmostEqual(data['home_tax_rate'], 0.023400)
         self.assertEqual(data['home_tax_cuts_on_deliberation'], 33000)
 
-"""
 class DepartmentFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('data/department_2012_account.html',
@@ -193,6 +192,7 @@ class DepartmentFinanceParsingTestCase(unittest2.TestCase):
     def test_parsing(self):
         parser = DepartmentParser('', 2012, '')
         data = parser.parse(self.response)
+        self.assertTrue('allocation' in data)
         self.assertEqual(data['name'], 'CANTAL')
         self.assertEqual(data['population'], 148380)
         # test data parsed from first table
@@ -215,6 +215,7 @@ class RegionFinanceParsingTestCase(unittest2.TestCase):
     def test_parsing(self):
         parser = RegionParser('', 2012, '')
         data = parser.parse(self.response)
+        self.assertTrue('allocation' in data)
         self.assertEqual(data['name'], 'REGION BASSE-NORMANDIE')
         self.assertEqual(data['population'], 1470880)
         # test data parsed from first table
@@ -226,6 +227,53 @@ class RegionFinanceParsingTestCase(unittest2.TestCase):
         # test data parsed from second table
         self.assertEqual(data['business_profit_contribution_value'], 64681000)
         self.assertEqual(data['business_profit_contribution_cuts_on_deliberation'], 288000)
-"""
+
+class RegionFinance2008ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/region_2008_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = RegionParser('', 2008, '')
+        data = parser.parse(self.response)
+        self.assertTrue('allocation' in data)
+        self.assertEqual(data['name'], 'REGION BASSE-NORMANDIE')
+        self.assertEqual(data['population'],  1422193)
+        # test data parsed from first table
+        self.assertEqual(data['operating_revenues'], 517789 * 1e3)
+        self.assertEqual(data['direct_tax'], 139801 * 1e3)
+        self.assertEqual(data['tipp'], 92536 * 1e3)
+        self.assertEqual(data['operating_costs'], 411269 * 1e3)
+
+        # test data parsed from second table
+        self.assertEqual(data['property_tax_basis'], 1146012 * 1e3)
+        self.assertEqual(data['property_tax_value'], 60623 * 1e3)
+        self.assertEqual(data['property_tax_rate'], 0.0529)
+        self.assertEqual(data['business_tax_basis'], 2686771 * 1e3)
+        self.assertEqual(data['business_tax_value'], 85439 * 1e3)
+        self.assertEqual(data['business_tax_rate'], 0.0318)
+
+class RegionFinance2009ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/region_2009_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = RegionParser('', 2009, '')
+        data = parser.parse(self.response)
+        self.assertTrue('allocation' in data)
+        # test data parsed from first table
+        self.assertEqual(data['tipp'], 97982 * 1e3)
+
+        # test data parsed from second table
+        self.assertEqual(data['property_tax_basis'], 1201584 * 1e3)
+        self.assertEqual(data['property_tax_cuts_on_deliberation'], 42 * 1e3)
+        self.assertEqual(data['property_tax_value'], 63566 * 1e3)
+        self.assertEqual(data['property_tax_rate'], 0.0529)
+        self.assertEqual(data['business_tax_basis'], 2777345 * 1e3)
+        self.assertEqual(data['business_tax_cuts_on_deliberation'], 40309 * 1e3)
+        self.assertEqual(data['business_tax_value'], 88318 * 1e3)
+        self.assertEqual(data['business_tax_rate'], 0.0318)
+
 if __name__ == '__main__':
     unittest2.main()
