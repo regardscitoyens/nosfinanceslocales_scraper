@@ -18,11 +18,20 @@ Usage
 
 To scrap data of a give zone type (city, epci, department or region) on a given fiscal
 year YYYY, run in the root dir:
+
 `scrapy crawl localgouv -o scraped_data_dir/zonetype_YYYY.json -t csv -a year=YYYY`
 
 To scrap data for all available fiscal years for a given zone type:
+
 `. bin/crawl_all_years zonetype`
 
+To generate a csv file with all data for a given zonetype and with french
+header, run:
+
+`. bin/bundle zonetype`
+
+This command will generate a file in nosdonnees/zonetype_all.csv which you can
+upload on [nosdonnees.fr](nosdonnees.fr) website.
 
 
 
