@@ -16,21 +16,14 @@ notebooks:
 Usage
 =====
 
-To scrap data of every cities on the fiscal year 2012, run in the root
-dir:
-`scrapy crawl localgouv -o scraped_data_dir/cities_2012.json -t json -a year=2012`
+To scrap data of a give zone type (city, epci, department or region) on a given fiscal
+year YYYY, run in the root dir:
+`scrapy crawl localgouv -o scraped_data_dir/zonetype_YYYY.json -t csv -a year=YYYY`
 
-For EPCIs:
-`scrapy crawl localgouv -o scraped_data_dir/epci_2012.json -t json -a year=2012 -a zone_type=epci`
+To scrap data for all available fiscal years for a given zone type:
+`. bin/crawl_all_years zonetype`
 
-For departments:
-`scrapy crawl localgouv -o scraped_data_dir/dep_2012.json -t json -a year=2012 -a zone_type=dep`
 
-For regions:
-`scrapy crawl localgouv -o scraped_data_dir/region_2012.json -t json -a year=2012 -a zone_type=reg`
-
-Scraped data samples are available in scraped_data directory:
- * [epci_2012.sample.json](scraped_data/epci_2012.sample.json)
 
 
 Requirements
