@@ -29,7 +29,6 @@ def convert_value(val):
             val = float(val.replace('%', ''))/100
         return float(val) * mult
     else:
-        print "none"
         return None
 
 class CityParser(object):
@@ -123,35 +122,43 @@ class CityParser(object):
             return Before2008TaxParser(self.account).parse(hxs)
 
 class TaxParser(object):
-    def __init__(self, account, table_ix=4, tax_values_icol=(0,4), tax_name_icol=3):
+    tax_values_icol=(0,4)
+    def __init__(self, account, table_ix=4):
         # In the table with tax data, the values can be in the first column and
         # the fourth. The name of the data in third column.
         self.account = account
         self.table_ix = table_ix
-        self.tax_values_icol = tax_values_icol
-        self.tax_name_icol = tax_name_icol
 
     def table(self, hxs):
         """Select table where we have tax data"""
         return hxs.select('//body/table[position()=%s]'%self.table_ix)
 
 class After2008TaxParser(TaxParser):
+    # Define all taxes
+    # [name of tax info, start row, end row, col index of name of tax, is_percent]
+    basis = ['basis', 0, 4, 9, 3, False]
+    cuts_on_deliberation = ['cuts_on_deliberation', 4, 4, 9, 3, False]
+    value = ['value', 0, 10, 16, 3, False]
+    rate = ['rate', 4, 10, 16, 3, True]
+    repartition_cuts_on_deliberation = ['cuts_on_deliberation', 4, 18, 21, 3, False]
+    repartition_value = ['value', 0, 18, 21, 3, False]
+
     def parse(self, hxs):
-        data = self.tax_basis(hxs)
-        data.update(self.tax_cuts_on_deliberation(hxs))
-        data.update(self.tax_revenues(hxs))
-        data.update(self.tax_rates(hxs))
-        data.update(self.repartition_taxes(hxs))
+        data = {}
+        for tax in [self.basis, self.cuts_on_deliberation, self.value, self.rate,
+                    self.repartition_cuts_on_deliberation, self.repartition_value]:
+            if tax:
+                data.update(self.parse_tax_info(hxs, *tax))
         return data
 
-    def parse_one_tax_info(self, hxs, info_name, icol_value, start_row, end_row, is_percent=False):
+    def parse_tax_info(self, hxs, info_name, icol_value, start_row, end_row, tax_name_icol, is_percent):
         data = {}
         for row in self.table(hxs).select('.//tr')[start_row:end_row]:
             tds = row.select('.//td')
-            if len(tds) <= max(icol_value, self.tax_name_icol):
+            if len(tds) <= max(icol_value, tax_name_icol):
                 continue
-            name = tds[self.tax_name_icol].select('./text()').extract()[0].strip()
-            targets = self.account.find_node(name=name)
+            name = tds[tax_name_icol].select('./text()').extract()[0].strip()
+            targets = self.account.find_node(name=name, type='section')
             if targets:
                 target = targets[0]
                 str_val = tds[icol_value].select('./text()').extract()[0].strip()
@@ -172,29 +179,12 @@ class After2008TaxParser(TaxParser):
                 print "There is no node of name %s "%name
         return data
 
-    def tax_basis(self, hxs):
-        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 9)
-
-    def tax_cuts_on_deliberation(self, hxs):
-        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 9)
-
-    def tax_revenues(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 10, 16)
-
-    def tax_rates(self, hxs):
-        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 10, 16, is_percent=True)
-
-    def repartition_taxes(self, hxs):
-        data = self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 18, 21)
-        data.update(self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 18, 21))
-        return data
-
-
 class Before2008TaxParser(TaxParser):
     def __init__(self, *args, **kwargs):
         super(Before2008TaxParser, self).__init__(*args, **kwargs)
+        self.tax_name_icol = 3
         self.table_ix = 3
-
+        self.tax_values_icol = (0, 4)
     def parse(self, hxs):
         data = {}
         tax_names = ['home_tax', 'property_tax', 'land_property_tax', 'business_tax']
@@ -227,23 +217,15 @@ class EPCIParser(CityParser):
         return int(pop.replace(' ', ''))
 
     def taxes(self, hxs):
-        return EPCITaxParser(self.account, tax_values_icol=(0,3), tax_name_icol=2).parse(hxs)
+        return EPCITaxParser(self.account).parse(hxs)
 
 class EPCITaxParser(After2008TaxParser):
-    def tax_basis(self, hxs):
-        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 11)
-
-    def tax_cuts_on_deliberation(self, hxs):
-        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 11)
-
-    def tax_revenues(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 13, 20)
-
-    def tax_rates(self, hxs):
-        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 13, 20, is_percent=True)
-
-    def repartition_taxes(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 22, 25)
+    basis = ['basis', 0, 4, 11, 2, False]
+    cuts_on_deliberation = ['cuts_on_deliberation', 3, 4, 11, 2, False]
+    value = ['value', 0, 13, 20, 2, False]
+    rate = ['rate', 3, 13, 20, 2, True]
+    repartition_cuts_on_deliberation = None
+    repartition_value = ['value', 0, 22, 25, 2, False]
 
 class DepartmentParser(CityParser):
     zone_type = 'department'
@@ -263,24 +245,30 @@ class DepartmentParser(CityParser):
         return int(pop.replace(' ', ''))
 
     def taxes(self, hxs):
-        return DepTaxParser(self.account, table_ix=6, tax_values_icol=(0,4), tax_name_icol=3).parse(hxs)
+        if int(self.data['year']) > 2010:
+            return DepTaxParser(self.account, table_ix=6).parse(hxs)
+        elif int(self.data['year']) > 2008:
+            return DepTax20092010Parser(self.account, table_ix=6).parse(hxs)
+        else:
+            return DepTax2008Parser(self.account, table_ix=6).parse(hxs)
 
 class DepTaxParser(After2008TaxParser):
-    def tax_basis(self, hxs):
-        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 6)
+    basis = ['basis', 0, 4, 6, 3, False]
+    cuts_on_deliberation = ['cuts_on_deliberation', 4, 4, 6, 3, False]
+    value = ['value', 0, 8, 9, 3, False]
+    rate = ['rate', 4, 8, 9, 3, True]
+    repartition_cuts_on_deliberation = None
+    repartition_value = ['value', 0, 11, 13, 1, False]
 
-    def tax_cuts_on_deliberation(self, hxs):
-        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 6)
+class DepTax20092010Parser(DepTaxParser):
+    basis = ['basis', 0, 4, 8, 3, False]
+    cuts_on_deliberation = None
+    value = ['value', 0, 9, 14, 3, False]
+    rate = ['rate', 4, 9, 14, 3, True]
+    repartition_value = None
 
-    def tax_revenues(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 8, 9)
-
-    def tax_rates(self, hxs):
-        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 8, 9, is_percent=True)
-
-    def repartition_taxes(self, hxs):
-        # TODO: add parsing of cuts_on_deliberation
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 11, 13)
+class DepTax2008Parser(DepTax20092010Parser):
+    basis = ['basis', 0, 3, 8, 2, False]
 
 class RegionParser(DepartmentParser):
     zone_type = 'region'
@@ -293,70 +281,30 @@ class RegionParser(DepartmentParser):
 
     def taxes(self, hxs):
         if int(self.data['year']) == 2008:
-            return RegTaxParser2008(self.account).parse(hxs)
+            return RegTaxParser2008(self.account, table_ix=6).parse(hxs)
         elif int(self.data['year']) < 2011:
-            return RegTaxParser20092010(self.account).parse(hxs)
+            return RegTaxParser20092010(self.account, table_ix=6).parse(hxs)
         else:
-            return RegTaxParserAfter2011(self.account, table_ix=6, tax_values_icol=(0,4), tax_name_icol=1).parse(hxs)
+            return RegTaxParserAfter2011(self.account, table_ix=6).parse(hxs)
 
 class RegTaxParserAfter2011(DepTaxParser):
-    def tax_basis(self, hxs):
-        return {}
-
-    def tax_cuts_on_deliberation(self, hxs):
-        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[0], 3, 4)
-
-    def tax_rates(self, hxs):
-        return {}
-
-    def tax_revenues(self, hxs):
-        return {}
-
-    def repartition_taxes(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 6, 8)
+    basis = None
+    cuts_on_deliberation = ['cuts_on_deliberation', 0, 3, 4, 1, False]
+    value = None
+    rate = None
+    repartition_value = ['value', 0, 6, 8, 1, False]
 
 class RegTaxParser20092010(DepTaxParser):
-    def __init__(self, account):
-        self.account = account
-        self.table_ix=6
-        self.tax_values_icol=(0,4)
-        self.tax_name_icol=3
-
-    def tax_basis(self, hxs):
-        return self.parse_one_tax_info(hxs, 'basis', self.tax_values_icol[0], 4, 7)
-
-    def tax_cuts_on_deliberation(self, hxs):
-        return self.parse_one_tax_info(hxs, 'cuts_on_deliberation', self.tax_values_icol[1], 4, 7)
-
-    def tax_revenues(self, hxs):
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 8, 12)
-
-    def tax_rates(self, hxs):
-        return self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 8, 12, is_percent=True)
-
-    def repartition_taxes(self, hxs):
-        return {}
+    basis = ['basis', 0, 4, 7, 3, False]
+    cuts_on_deliberation = ['cuts_on_deliberation', 4, 4, 7, 3, False]
+    value = ['value', 0, 8, 12, 3, False]
+    rate = ['rate', 4, 8, 12, 3, True]
+    repartition_cuts_on_deliberation = None
+    repartition_value = None
 
 class RegTaxParser2008(RegTaxParser20092010):
-    def __init__(self, account):
-        self.account = account
-        self.table_ix=6
-        self.tax_values_icol=(0,4)
-        self.tax_name_icol=2
-
-    def tax_revenues(self, hxs):
-        self.tax_name_icol = 3
-        data = self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 9, 13)
-        self.tax_name_icol = 2
-        return data
-
-    def tax_rates(self, hxs):
-        self.tax_name_icol = 3
-        data = self.parse_one_tax_info(hxs, 'rate', self.tax_values_icol[1], 9, 13, is_percent=True)
-        self.tax_name_icol = 2
-        return data
-
-    def repartition_taxes(self, hxs):
-        # TODO: add parsing of cuts_on_deliberation
-        return self.parse_one_tax_info(hxs, 'value', self.tax_values_icol[0], 11, 13)
-
+    basis = ['basis', 0, 4, 7, 2, False]
+    cuts_on_deliberation = ['cuts_on_deliberation', 4, 4, 7, 2, False]
+    value = ['value', 0, 9, 13, 3, False]
+    rate = ['rate', 4, 9, 13, 3, True]
+    repartition_value = ['value', 0, 11, 13, 2, False]

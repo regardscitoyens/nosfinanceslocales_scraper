@@ -91,7 +91,8 @@ def add_operating_operations(account):
         'operatings_operations': {'name': u'OPERATIONS DE FONCTIONNEMENT', 'type': 'section'},
         'operating_revenues': {'name': [u'TOTAL DES PRODUITS DE FONCTIONNEMENT = A', u"Total des produits de fonctionnement = A"]},
         'other_tax': {'name': u"Autres impôts et taxes"},
-        'allocation': {'name': u"Dotation globale de fonctionnement"},
+        'allocation': {'name': [u'Dotation globale de fonctionnement',
+                                u'dotation globale de fonctionnement']},
         'operating_costs': {'name': [u"Total des charges de fonctionnement = B", u'TOTAL DES CHARGES DE FONCTIONNEMENT = B']},
         'staff_costs': {'name': [u'Charge de personnel (montant net)', u'Charges de personnel']},
         'purchases_and_external_costs': {'name': u'Achats et charges externes (montant net)'},
@@ -321,12 +322,18 @@ def make_department_account():
         'apa': {'name': u'APA'},
         'rsa': {'name': u'RSA'},
         'accomodation_costs': {'name': u"frais de séjour et d'hébergement"},
-        'property_tax': {'name': u"Taxe foncière sur les propriétés bâties"},
+        'compensation_2010': {'name': u"Compensation-Relais 2010", 'type': 'section'},
+        'home_tax': {
+            'name': [u"Taxe d'habitation",
+                     u"Taxe d'habitation (y compris THLV)",
+                     u"Produits taxe d'habitation"],
+            'type': 'section'
+        },
     })
     account.add_edges('operating_revenues',
                       ['advertisement_tax', 'allocation_and_stake',])
     account.add_edges('operating_costs', ['pch', 'apa', 'rsa', 'accomodation_costs'])
-    account.add_edge('taxation', 'property_tax')
+    add_tax_infos(account, ['home_tax', 'compensation_2010'])
 
     return account
 

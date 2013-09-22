@@ -192,7 +192,7 @@ class DepartmentFinanceParsingTestCase(unittest2.TestCase):
     def test_parsing(self):
         parser = DepartmentParser('', 2012, '')
         data = parser.parse(self.response)
-        self.assertTrue('allocation' in data)
+        self.assertEqual(data['allocation'], 52327 * 1e3)
         self.assertEqual(data['name'], 'CANTAL')
         self.assertEqual(data['population'], 148380)
         # test data parsed from first table
@@ -205,7 +205,58 @@ class DepartmentFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['property_tax_basis'], 129386000)
         self.assertEqual(data['property_tax_value'], 30483000)
         self.assertAlmostEqual(data['property_tax_rate'], 0.2356)
-        self.assertEqual(data['business_profit_contribution_cuts_on_deliberation'], 4000)
+
+class DepartmentFinance2011ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/department_2011_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = DepartmentParser('', 2011, '')
+        data = parser.parse(self.response)
+        for key in ['tipp', 'property_tax_basis', 'property_tax_value',
+                    'property_tax_cuts_on_deliberation', 'property_tax_rate',
+                    'business_profit_contribution_basis',
+                    'business_network_tax_value']:
+            self.assertTrue(key in data)
+
+class DepartmentFinance2010ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/department_2010_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = DepartmentParser('', 2010, '')
+        data = parser.parse(self.response)
+        for key in ['tipp', 'property_tax_basis', 'property_tax_value',
+                    'compensation_2010_value', 'home_tax_value',
+                    'property_tax_rate', 'home_tax_rate']:
+            self.assertTrue(key in data)
+
+class DepartmentFinance2009ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/department_2009_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = DepartmentParser('', 2009, '')
+        data = parser.parse(self.response)
+        for key in ['tipp', 'property_tax_basis', 'property_tax_value',
+                    'business_tax_value', 'home_tax_value',
+                    'property_tax_rate', 'home_tax_rate']:
+            self.assertTrue(key in data)
+
+class DepartmentFinance2008ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/department_2008_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = DepartmentParser('', 2008, '')
+        data = parser.parse(self.response)
+        for key in ['tipp', 'property_tax_basis', 'property_tax_value',
+                    'property_tax_rate', 'home_tax_rate', 'business_tax_rate']:
+            self.assertTrue(key in data)
 
 class RegionFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
