@@ -174,7 +174,7 @@ def convert_dom_code(df, column='DEP'):
     return df[column].apply(lambda code: DOM_DEP_MAPPING.get(code, code))
 
 def get_dep_code_from_com_code(com):
-    return DOM_DEP_MAPPING.get(str(com[:3]), ('0%s'%com)[:2])
+    return DOM_DEP_MAPPING.get(str(com[:3]), ('0%s'%com)[:3])
 
 def convert_city(row):
     # Another strange thing, DOM cities have an insee_code on 2 digits in the
