@@ -21,3 +21,7 @@ AUTOTHROTTLE_ENABLED = True
 # Logging does weird things...
 #import scrapy
 #scrapy.log.start(logfile="logs/logs", loglevel=scrapy.log.DEBUG, logstdout=True)
+HTTPCACHE_ENABLED = True
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.contrib.downloadermiddleware.httpcache.HttpCacheMiddleware': 543,
+}
