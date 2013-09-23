@@ -9,15 +9,15 @@ We used scrapy lib to crawl the page and xpaths stuff to scrap data.
 
 To check the quality of the crawling and to analyze data, we use ipython
 notebooks:
- * analysis of data from cities in 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/localgouvdata_analysis.ipynb)
- * analysis of data from epci from 2007 to 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/epcidata_analysis.ipynb)
- * analysis of data from departments from 2008 to 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/department_analysis.ipynb)
- * analysis of data from regions from 2008 to 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/region_analysis.ipynb)
+ * [analysis of data from cities in 2012](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/localgouvdata_analysis.ipynb)
+ * [analysis of data from epci from 2007 to 2012](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/epcidata_analysis.ipynb)
+ * [analysis of data from departments from 2008 to 2012](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/department_analysis.ipynb)
+ * [analysis of data from regions from 2008 to 2012](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/region_analysis.ipynb)
 
 
 All the data scraped for the regions is committed as an example here:
- * with variable names as header: [region_all.csv](scraped_data/region_all.csv)
- * with french header: [region_all_fr](nosdonnees/region_all.csv)
+ * with variable names as header: [scraped_data/region_all.csv](scraped_data/region_all.csv)
+ * with french header: [nosdonnees/region_all.csv](nosdonnees/region_all.csv)
 
 
 Usage
