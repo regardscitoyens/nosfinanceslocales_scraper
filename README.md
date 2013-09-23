@@ -15,6 +15,11 @@ notebooks:
  * analysis of data from regions from 2008 to 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/region_analysis.ipynb)
 
 
+All the data scraped for the regions is committed as an example here:
+ * with variable names as header: [region_all.csv](scraped_data/region_all.csv)
+ * with french header: [region_all_fr](nosdonnees/region_all.csv)
+
+
 Usage
 =====
 
@@ -33,7 +38,7 @@ header, run:
 `. bin/bundle.sh zonetype`
 
 This command will generate a file in nosdonnees/zonetype_all.csv which you can
-upload on [nosdonnees.fr](nosdonnees.fr) website.
+upload on [nosdonnees.fr](http://www.nosdonnees.fr) website.
 
 
 
