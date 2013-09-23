@@ -10,7 +10,9 @@ We used scrapy lib to crawl the page and xpaths stuff to scrap data.
 To check the quality of the crawling and to analyze data, we use ipython
 notebooks:
  * analysis of data from cities in 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/localgouvdata_analysis.ipynb)
- * analysis of data from epci in 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/epcidata_analysis.ipynb)
+ * analysis of data from epci from 2007 to 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/epcidata_analysis.ipynb)
+ * analysis of data from departments from 2008 to 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/department_analysis.ipynb)
+ * analysis of data from regions from 2008 to 2012 [here](http://nbviewer.ipython.org/urls/raw.github.com/fmassot/localgouv_scraper/master/notebooks/region_analysis.ipynb)
 
 
 Usage
