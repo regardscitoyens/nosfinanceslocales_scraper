@@ -25,3 +25,5 @@ HTTPCACHE_ENABLED = True
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.contrib.downloadermiddleware.httpcache.HttpCacheMiddleware': 543,
 }
+
+HTTPCACHE_STORAGE = 'scrapy.contrib.httpcache.FilesystemCacheStorage'
