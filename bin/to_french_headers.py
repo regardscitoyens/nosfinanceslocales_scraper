@@ -19,6 +19,7 @@ zone_type = sys.argv[2]
 csvoutput = os.path.join('nosdonnees', os.path.basename(csvfile))
 
 df = pd.read_csv(csvfile)
+df = df.dropna(axis=1, how='all')
 if zone_type == 'region':
     account = region_account
 elif zone_type == 'department':
