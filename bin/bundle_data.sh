@@ -9,4 +9,4 @@ find $dir -name "${zone_type}_*[0-9].csv" | xargs -n 1 tail -n +2 > $name.data
 cat $name.head ${name}.data > ${name}_all.csv
 rm $name.head ${name}.data
 
-python bin/to_french_headers.py ${name}_all.csv $zone_type
+python bin/clean_csv.py ${name}_all.csv $zone_type
