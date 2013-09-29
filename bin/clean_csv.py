@@ -52,7 +52,7 @@ def get_fr_name(column):
 
 fr_columns = []
 for column in df.columns.tolist():
-    fr_name = get_fr_name(column)
+    fr_name = get_fr_name(column).lower()
     fr_columns.append(fr_name)
     df[fr_name] = df[column]
 
