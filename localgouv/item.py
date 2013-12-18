@@ -14,6 +14,7 @@ class FinancialData(Item):
     name = Field()
     year = Field()
     url = Field()
+    code = Field()
 
 class CityFinancialData(FinancialData):
    insee_code = Field()
