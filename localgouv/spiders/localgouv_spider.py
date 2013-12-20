@@ -124,7 +124,7 @@ class LocalGouvFinanceSpider(BaseSpider):
         hxs = HtmlXPathSelector(response)
         icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})', response.url).groups()
         parser = CityParser(dep+icom, year, response.url)
-        data = parser.parse(response)
+        data = parser.parse(hxs)
         # convert account object to an Item instance.
         # WHY DO I NEED TO DO THAT SCRAPY ????
         item = CityFinancialData(data)
