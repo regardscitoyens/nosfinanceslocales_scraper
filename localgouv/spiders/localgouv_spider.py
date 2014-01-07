@@ -79,7 +79,7 @@ class LocalGouvFinanceSpider(BaseSpider):
         data = data.groupby('siren', as_index=False).first()
         data['dep'] = data[u'Département commune'].apply(get_dep_code_from_com_code)
         baseurl = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s"%(self.domain, str(year))
-        return [baseurl%row for __, row in data.iterrows()][1:]
+        return [baseurl%row for __, row in data.iterrows()]
 
     def get_commune_urls(self, year):
         """
@@ -87,15 +87,12 @@ class LocalGouvFinanceSpider(BaseSpider):
         - COM: the insee code of the commune
         - DEP: the department code on 3 characters
         - type: type of financial data, BPS is for the whole data.
-        - param: ?
         - exercise: year of financial data
         """
 
         insee_code_file="./data/france2013.txt"
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
         # XXX: insee_communes file contains also "cantons", filter out these lines
-        # XXX: some departments are not crawled correctly: 75, 92, 93, 94 and maybe
-        # others. Fix this.
         mask = data['ACTUAL'].apply(lambda v: v in [1, 2, 3])
         data = data[mask]
 
@@ -123,7 +120,11 @@ class LocalGouvFinanceSpider(BaseSpider):
         """Parse the response and return an Account object"""
         hxs = HtmlXPathSelector(response)
         icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})', response.url).groups()
-        parser = CityParser(dep+icom, year, response.url)
+        # XXX: better to use the real insee code for later analysis, not icom and dep
+        # in url.
+        real_dep = dict([(val, key) for key, val in DOM_DEP_MAPPING.items()]).get(dep, dep[1:])
+        real_com = icom if dep not in DOM_DEP_MAPPING.values() else icom[1:]
+        parser = CityParser(real_dep+real_com, year, response.url)
         data = parser.parse(hxs)
         # convert account object to an Item instance.
         # WHY DO I NEED TO DO THAT SCRAPY ????
@@ -131,23 +132,26 @@ class LocalGouvFinanceSpider(BaseSpider):
         return item
 
     def parse_epci(self, response):
+        hxs = HtmlXPathSelector(response)
         siren, year = re.search('siren=(\d+)&dep=\w{3}&type=BPS&exercice=(\d{4})', response.url).groups()
         parser = EPCIParser(siren, year, response.url)
-        data = parser.parse(response)
+        data = parser.parse(hxs)
         item = EPCIFinancialData(data)
         return item
 
     def parse_dep(self, response):
+        hxs = HtmlXPathSelector(response)
         dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
         parser = DepartmentParser(dep, year, response.url)
-        data = parser.parse(response)
+        data = parser.parse(hxs)
         item = DepartmentFinancialData(data)
         return item
 
     def parse_reg(self, response):
+        hxs = HtmlXPathSelector(response)
         dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
         parser = RegionParser(dep, year, response.url)
-        data = parser.parse(response)
+        data = parser.parse(hxs)
         item = RegionFinancialData(data)
         return item
 
@@ -176,17 +180,17 @@ def convert_dom_code(df, column='DEP'):
 def get_dep_code_from_com_code(com):
     return DOM_DEP_MAPPING.get(str(com[:3]), ('0%s'%com)[:3])
 
+# Another strange thing, DOM cities have an insee_code on 2 digits in the
+# insee file. We need to add a third digit before these two to crawl the
+# right page. This third digit is find according to this mapping:
+# GUADELOUPE: 1
+# MARTINIQUE: 2
+# GUYANE: 3
+# REUNION: 4
+DOM_CITY_DIGIT_MAPPING = {'101': 1, '103': 2, '102': 3, '104': 4}
 def convert_city(row):
-    # Another strange thing, DOM cities have an insee_code on 2 digits in the
-    # insee file. We need to add a third digit before these two to crawl the
-    # right page. This third digit is find according to this mapping:
-    # GUADELOUPE: 1
-    # MARTINIQUE: 2
-    # GUYANE: 3
-    # REUNION: 4
-    digit_mapping = {'101': 1, '103': 2, '102': 3, '104': 4}
     if row['DEP'] not in ['101', '102', '103', '104']:
         return row['COM']
-    first_digit = str(digit_mapping.get(row['DEP']))
+    first_digit = str(DOM_CITY_DIGIT_MAPPING.get(row['DEP']))
     return first_digit + row['COM'][1:]
 

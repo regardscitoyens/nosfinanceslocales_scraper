@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 from .account_network import (
     city_account,
     epci_account,
@@ -9,10 +11,9 @@ from .account_network import (
 
 def sanitize_value(val):
     """Remove crap from val string and then convert it into float"""
-    val = val.replace(u'\xa0', '')\
-             .replace(',', '.')\
-             .replace(u'\xa0', '')\
-             .replace(' ', '')
+    val = re.sub(u"(\xa0|\s)", '', val)
+    val = val.replace(',', '.')
+
     # positive or negative multiplier
     mult = 1
 
@@ -28,7 +29,7 @@ def sanitize_value(val):
         return float(val) * mult
 
 def sanitize_name(name):
-    return name.replace('dont', '').replace(':', '').replace('+', '').strip()
+    return re.sub("(dont|\:|\+)", "", name).strip()
 #
 #
 #
@@ -307,8 +308,8 @@ class BaseParser(object):
     finance_table_id = 3
     finance_parser_cls = None
 
-    def __init__(self, code, year, url):
-        self.data = {'code':code,
+    def __init__(self, insee_code, year, url):
+        self.data = {'insee_code': insee_code,
                      'year': year,
                      'zone_type': self.zone_type,
                      'url': url}
@@ -360,6 +361,12 @@ class EPCIParser(BaseParser):
     zone_type = 'epci'
     account = epci_account
     finance_parser_cls = EPCIFinanceParser
+
+    def __init__(self, siren, year, url):
+        self.data = {'siren': siren,
+                     'year': year,
+                     'zone_type': self.zone_type,
+                     'url': url}
 
     @property
     def tax_parser(self):

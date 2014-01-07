@@ -45,16 +45,17 @@ class Network(object):
         return list(self.pred[node].keys())
 
     def find_node(self, **attr):
-        """Find a node by its attributes"""
+        """Find a node by its attributes:
+            a node matches if at least one of its lower str attribute value matches"""
         matched_nodes = []
         for node, node_attr in self.nodes.iteritems():
             append = True
             for attr_k, attr_v in attr.iteritems():
                 node_attr_v = node_attr[attr_k] if attr_k in node_attr else None
-                if attr_k in node_attr and (attr_v == node_attr_v or attr_v in node_attr_v):
-                    pass
+                if type(node_attr_v) in (list, tuple):
+                    append = append and (attr_v.lower() in [v.lower() for v in node_attr_v])
                 else:
-                    append = False
+                    append = append and (node_attr_v is not None and attr_v.lower() == node_attr_v.lower())
             if append:
                 matched_nodes.append(node)
         return matched_nodes
@@ -93,11 +94,11 @@ def add_operating_operations(account):
         'other_tax': {'name': u"Autres impôts et taxes"},
         'allocation': {'name': [u'Dotation globale de fonctionnement',
                                 u'dotation globale de fonctionnement']},
-        'operating_costs': {'name': [u"Total des charges de fonctionnement = B", u'TOTAL DES CHARGES DE FONCTIONNEMENT = B']},
+        'operating_costs': {'name': [u"TOTAL DES CHARGES DE FONCTIONNEMENT = B"]},
         'staff_costs': {'name': [u'Charge de personnel (montant net)', u'Charges de personnel']},
-        'purchases_and_external_costs': {'name': u'Achats et charges externes (montant net)'},
+        'purchases_and_external_costs': {'name': [u'Achats et charges externes (montant net)', u'Achats et charges externes']},
         'financial_costs': {'name': u'Charges financières'},
-        'net_profit': {'name': [u"Résultat comptable = A - B", u'RESULTAT COMPTABLE = A - B = R']},
+        'net_profit': {'name': [u'RESULTAT COMPTABLE = A - B = R', u"Résultat comptable = A - B"]},
     })
 
     account.add_edge('root', 'operatings_operations')
@@ -123,8 +124,8 @@ def add_investments_operations(account):
         'loans': {'name': [u"Emprunts souscrits",
                            u"Emprunts bancaires et dettes assimilées"]},
         'investments_usage': {
-            'name': [u"Total des emplois d'investissement budgétaires = D",
-                      u"TOTAL DES EMPLOIS D'INVESTISSEMENT = D"]
+            'name': [u"TOTAL DES EMPLOIS D'INVESTISSEMENT = D",
+                     u"Total des emplois d'investissement budgétaires = D"]
         },
         'debt_repayments': {
             'name': [u"Remboursement en capital des emprunts",
@@ -140,13 +141,14 @@ def add_investments_operations(account):
             'name': [u"Besoin de financement de la section d'investissement",
                      u"= Besoin ou capacité de financement de la section d'investissement = E"]
         },
-        'global_profit': {'name': [u"Résultat d'ensemble", u"Résultat d'ensemble = R - E"]},
+        'global_profit': {'name': [u"Résultat d'ensemble = R - E", u"Résultat d'ensemble"]},
     })
 
     account.add_edges('root', ['investments', 'global_profit'])
     account.add_edges('investments', ['investment_ressources', 'fctva', 'loans',
                                       'received_subsidies', 'investments_usage',
                                       'debt_repayments', 'thirdparty_balance',
+                                      'residual_financing_capacity',
                                       'financing_capacity'])
 
 def add_debt(account):
