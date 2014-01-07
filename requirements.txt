@@ -1,4 +1,4 @@
-Scrapy==0.16.5
+Scrapy==0.18.4
 Unipath==1.0
 lxml==3.2.3
 numpy==1.7.1
