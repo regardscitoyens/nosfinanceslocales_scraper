@@ -107,7 +107,9 @@ class DepartmentFinanceParser(FinanceParser):
     finance_name_icol = 0
     def name(self, hxs):
         xpath =  '//body/table[position()=3]/tr[position()=1]/td/span/text()'
-        return hxs.select(xpath).extract()[0].split('SITUATION FINANCIERE du DEPARTEMENT de')[1].strip()
+        text = hxs.select(xpath).extract()[0]
+        print re.split('SITUATION FINANCIERE du DEPARTEMENT (de|du) ', text)[-1]
+        return re.split('SITUATION FINANCIERE du DEPARTEMENT (de|du) ', text)[-1]
 
     def population(self, hxs):
         xpath =  '//body/table[position()=4]/tr[position()=1]/td/text()'
