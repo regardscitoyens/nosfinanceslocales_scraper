@@ -56,6 +56,6 @@ for column in df.columns.tolist():
     fr_columns.append(fr_name)
     df[fr_name] = df[column]
 
-outputdf = df[fr_columns]
+outputdf = df[sorted(fr_columns)]
 outputdf.to_csv(csvoutput, index=False, encoding='utf-8')
 
