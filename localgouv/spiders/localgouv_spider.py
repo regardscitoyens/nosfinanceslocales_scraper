@@ -94,7 +94,13 @@ class LocalGouvFinanceSpider(BaseSpider):
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
         # XXX: insee_communes file contains also "cantons", filter out these lines
         mask = data['ACTUAL'].apply(lambda v: v in [1, 2, 3])
-        data = data[mask]
+        data = data[mask].reindex()
+
+        # XXX: as always paris is the exception. City code is 101 for years < 2010 and 056 for years >= 2010
+        # 056 is the right code, add 101 also to crawl pages for years < 2010
+        paris_row = data[(data.COM == 56) & (data.DEP == '75')].copy()
+        paris_row.COM = 101
+        data = data.append(paris_row)
 
         data['DEP'] = uniformize_code(data, 'DEP')
         data['COM'] = uniformize_code(data, 'COM')
@@ -124,7 +130,11 @@ class LocalGouvFinanceSpider(BaseSpider):
         # in url.
         real_dep = dict([(val, key) for key, val in DOM_DEP_MAPPING.items()]).get(dep, dep[1:])
         real_com = icom if dep not in DOM_DEP_MAPPING.values() else icom[1:]
-        parser = CityParser(real_dep+real_com, year, response.url)
+        real_insee_code = real_dep+real_com
+        # XXX: hack for paris ! \o/
+        if real_insee_code == '75101':
+            real_insee_code = '75056'
+        parser = CityParser(real_insee_code, year, response.url)
         data = parser.parse(hxs)
         # convert account object to an Item instance.
         # WHY DO I NEED TO DO THAT SCRAPY ????
@@ -142,7 +152,7 @@ class LocalGouvFinanceSpider(BaseSpider):
     def parse_dep(self, response):
         hxs = HtmlXPathSelector(response)
         dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
-        parser = DepartmentParser(dep, year, response.url)
+        parser = DepartmentParser(str(int(dep)), year, response.url)
         data = parser.parse(hxs)
         item = DepartmentFinancialData(data)
         return item
