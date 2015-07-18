@@ -98,10 +98,13 @@ class CityZoneParser(BaseZoneParser):
     def __init__(self, insee_code, year, url):
         super(CityZoneParser, self).__init__(insee_code, year, url)
 
-        if int(self.data['year']) > 2008:
+        if int(self.data['year']) > 2011:
             self.account = DocumentMapper("data/mapping/city_2012.yaml")
             self.tax_parser = CityTaxParser(self.account)
-        else:
+        elif 2008 < int(self.data['year']) < 2012:
+            self.account = DocumentMapper("data/mapping/city_2009.yaml")
+            self.tax_parser = CityTaxParser(self.account)
+        elif int(self.data['year']) < 2009:
             self.account = DocumentMapper("data/mapping/city_2000.yaml")
             self.tax_parser = CityBefore2008TaxParser(self.account)
 

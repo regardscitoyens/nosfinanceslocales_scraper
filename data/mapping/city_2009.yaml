@@ -11,11 +11,6 @@ OPERATIONS DE FONCTIONNEMENT:
   paid_subsidies: Subventions versées
   net_profit: RESULTAT COMPTABLE = A - B = R
 
-AUTOFINANCEMENT:
-  debt_repayment_capacity: CAF nette du remboursement en capital des emprunts
-  self_financing_capacity: Capacité d'autofinancement = CAF
-  surplus: Excédent brut de fonctionnement
-
 OPERATIONS D'INVESTISSEMENT:
   investment_ressources: TOTAL DES RESSOURCES D'INVESTISSEMENT = C
   loans: Emprunts bancaires et dettes assimilées
@@ -32,10 +27,16 @@ OPERATIONS D'INVESTISSEMENT:
   financing_capacity: = Besoin ou capacité de financement de la section d'investissement = E
   global_profit: Résultat d'ensemble = R - E
 
+AUTOFINANCEMENT:
+  surplus: Excédent brut de fonctionnement
+  self_financing_capacity: Capacité d'autofinancement = CAF
+  debt_repayment_capacity: CAF nette du remboursement en capital des emprunts
+
 ENDETTEMENT:
   debt_at_end_year: Encours total de la dette au 31/12/N
   debt_annual_costs: Annuité de la dette
   advances_from_treasury: Avances du Trésor au 31/12/N
+  working_capital: FONDS DE ROULEMENT
 
 tax:
   categories:

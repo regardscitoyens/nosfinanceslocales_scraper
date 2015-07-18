@@ -160,5 +160,77 @@ class Commune2012ParsingTestCase(unittest2.TestCase):
             self.assertAlmostEqual(data[key], val)
 
 
+class Commune2013ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('test/data/commune_2013_account.html', encoding='windows-1252')
+        self.data = {
+            'name': 'ORLEANS',
+            'population': 117833,
+            'operating_revenues': 180447000,
+            'localtax': 77686000,
+            'other_tax': 6442000,
+            'allocation': 35901000,
+            'operating_costs': 165497000,
+            'staff_costs': 78539000,
+            'purchases_and_external_costs': 33188000,
+            'financial_costs': 2373000,
+            'contingents': 60000,
+            'paid_subsidies': 26377000,
+            'net_profit': 14949000,
+            'investment_ressources': 79573000,
+            'loans': 12336000,
+            'received_subsidies': 12429000,
+            'fctva': 6484000,
+            'returned_properties': 0,
+            'investments_usage': 78029000,
+            'facilities_expenses': 54568000,
+            'debt_repayments': 12232000,
+            'costs_to_allocate': 0,
+            'fixed_assets': 0,
+            'residual_financing_capacity': -1544000,
+            'thirdparty_balance': -1000,
+            'financing_capacity': -1545000,
+            'global_profit': 16494000,
+            'surplus': 32501000,
+            'self_financing_capacity': 30827000,
+            'debt_repayment_capacity': 18595000,
+            'debt_at_end_year': 101223000,
+            'debt_annual_costs': 14549000,
+            'working_capital': 882000,
+            'home_tax_basis': 153650000,
+            'home_tax_cuts_on_deliberation': 33055000,
+            'property_tax_basis': 151051000,
+            'property_tax_cuts_on_deliberation': 0.,
+            'land_property_tax_basis': 211000,
+            'land_property_tax_cuts_on_deliberation': 0.,
+            'additionnal_land_property_tax_basis': 0.,
+            'additionnal_land_property_tax_cuts_on_deliberation': 0.,
+            'business_property_contribution_basis': 0.,
+            'business_property_contribution_cuts_on_deliberation': 0.,
+            'home_tax_value': 32251000,
+            'home_tax_rate': 0.2099,
+            'property_tax_value': 45028000,
+            'property_tax_rate': 0.2981,
+            'land_property_tax_value': 84000,
+            'land_property_tax_rate': 0.3960,
+            'additionnal_land_property_tax_value': 0.,
+            'additionnal_land_property_tax_rate': 0.,
+            'business_property_contribution_value': 0.,
+            'business_property_contribution_rate': 0.,
+            'business_profit_contribution_value': 0.,
+            'business_profit_contribution_cuts_on_deliberation': 0.,
+            'business_network_tax_value': 0.,
+            'business_network_tax_cuts_on_deliberation': 0.,
+            'retail_land_tax_value': 0.,
+            'retail_land_tax_cuts_on_deliberation': 0.,
+        }
+
+    def test_parsing(self):
+        parser = CityZoneParser('', 2013, '')
+        data = parser.parse(Selector(self.response))
+        for key, val in self.data.items():
+            self.assertAlmostEqual(data[key], val)
+
+
 if __name__ == '__main__':
     unittest2.main()
