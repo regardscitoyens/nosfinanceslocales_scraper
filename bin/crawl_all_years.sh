@@ -17,6 +17,6 @@ fi
 for year in $(seq $startyear 2012);
 do
     echo $year
-    scrapy crawl localgouv -o scraped_data/${zone_type}_$year.csv -t csv -a year=$year -a zone_type=$zone_type
+    scrapy crawl localfinance -o scraped_data/${zone_type}_$year.csv -t csv -a year=$year -a zone_type=$zone_type
 done
 

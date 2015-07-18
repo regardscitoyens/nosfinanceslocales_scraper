@@ -4,7 +4,7 @@ import sys, os
 sys.path.append(os.path.abspath('.'))
 import pandas as pd
 
-from localgouv.account_network import (
+from localfinance.account_network import (
     city_account,
     region_account,
     department_account,

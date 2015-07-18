@@ -9,7 +9,7 @@ sys.path.append(Path(__file__).ancestor(2))
 from scrapy.selector import HtmlXPathSelector
 from scrapy.http.response.html import HtmlResponse
 
-from localgouv.account_parsing import (
+from localfinance.account_parsing import (
     CityZoneParser,
     EPCIZoneParser,
     DepartmentZoneParser,

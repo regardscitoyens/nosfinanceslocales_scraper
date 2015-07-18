@@ -6,10 +6,10 @@
 #     http://doc.scrapy.org/topics/settings.html
 #
 
-BOT_NAME = 'localgouv'
+BOT_NAME = 'localfinance'
 
-SPIDER_MODULES = ['localgouv.spiders']
-NEWSPIDER_MODULE = 'localgouv.spiders'
+SPIDER_MODULES = ['localfinance.spiders']
+NEWSPIDER_MODULE = 'localfinance.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'localgouv (+http://www.yourdomain.com)'

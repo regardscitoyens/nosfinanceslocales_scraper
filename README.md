@@ -1,4 +1,4 @@
-Localgouv
+NosFinancesLocales scraper
 =========
 
 This project aims at scraping financial data of cities (="communes"), EPCI

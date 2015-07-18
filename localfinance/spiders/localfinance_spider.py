@@ -21,11 +21,11 @@ from ..item import (
 )
 
 
-class LocalGouvFinanceSpider(BaseSpider):
+class LocalFinanceSpider(BaseSpider):
     """Basic spider which crawls all pages of finance of french towns, departments
     regions and EPCI.
     """
-    name = "localgouv"
+    name = "localfinance"
     domain = "http://alize2.finances.gouv.fr"
     allowed_domains = [domain]
 
