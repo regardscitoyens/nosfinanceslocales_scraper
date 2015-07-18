@@ -3,15 +3,14 @@
 import pandas as pd
 import re
 
-from scrapy import log
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 
 from ..account_parsing import (
-    CityParser,
-    EPCIParser,
-    DepartmentParser,
-    RegionParser
+    CityZoneParser,
+    EPCIZoneParser,
+    DepartmentZoneParser,
+    RegionZoneParser
 )
 
 from ..item import (
@@ -20,6 +19,7 @@ from ..item import (
     DepartmentFinancialData,
     RegionFinancialData
 )
+
 
 class LocalGouvFinanceSpider(BaseSpider):
     """Basic spider which crawls all pages of finance of french towns, departments
@@ -134,7 +134,7 @@ class LocalGouvFinanceSpider(BaseSpider):
         # XXX: hack for paris ! \o/
         if real_insee_code == '75101':
             real_insee_code = '75056'
-        parser = CityParser(real_insee_code, year, response.url)
+        parser = CityZoneParser(real_insee_code, year, response.url)
         data = parser.parse(hxs)
         # convert account object to an Item instance.
         # WHY DO I NEED TO DO THAT SCRAPY ????
@@ -144,7 +144,7 @@ class LocalGouvFinanceSpider(BaseSpider):
     def parse_epci(self, response):
         hxs = HtmlXPathSelector(response)
         siren, year = re.search('siren=(\d+)&dep=\w{3}&type=BPS&exercice=(\d{4})', response.url).groups()
-        parser = EPCIParser(siren, year, response.url)
+        parser = EPCIZoneParser(siren, year, response.url)
         data = parser.parse(hxs)
         item = EPCIFinancialData(data)
         return item
@@ -152,7 +152,7 @@ class LocalGouvFinanceSpider(BaseSpider):
     def parse_dep(self, response):
         hxs = HtmlXPathSelector(response)
         dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
-        parser = DepartmentParser(str(int(dep)), year, response.url)
+        parser = DepartmentZoneParser(str(int(dep)), year, response.url)
         data = parser.parse(hxs)
         item = DepartmentFinancialData(data)
         return item
@@ -160,10 +160,11 @@ class LocalGouvFinanceSpider(BaseSpider):
     def parse_reg(self, response):
         hxs = HtmlXPathSelector(response)
         dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
-        parser = RegionParser(dep, year, response.url)
+        parser = RegionZoneParser(dep, year, response.url)
         data = parser.parse(hxs)
         item = RegionFinancialData(data)
         return item
+
 
 def uniformize_code(df, column):
     # Uniformize dep code and commune code to be on a string of length 3.
@@ -184,8 +185,11 @@ DOM_DEP_MAPPING = {
     '973': '102',
     '974': '104',
 }
+
+
 def convert_dom_code(df, column='DEP'):
     return df[column].apply(lambda code: DOM_DEP_MAPPING.get(code, code))
+
 
 def get_dep_code_from_com_code(com):
     return DOM_DEP_MAPPING.get(str(com[:3]), ('0%s'%com)[:3])
@@ -198,6 +202,8 @@ def get_dep_code_from_com_code(com):
 # GUYANE: 3
 # REUNION: 4
 DOM_CITY_DIGIT_MAPPING = {'101': 1, '103': 2, '102': 3, '104': 4}
+
+
 def convert_city(row):
     if row['DEP'] not in ['101', '102', '103', '104']:
         return row['COM']

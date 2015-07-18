@@ -1,0 +1,60 @@
+FONCTIONNEMENT:
+  operating_revenues: Total des produits de fonctionnement = A
+  operating_real_revenues: produits de fonctionnement réels
+  localtax: Impôts directs
+  refund_tax: Fiscalité reversée
+  other_tax: Autres impôts et taxes
+  advertisement_tax: taxe départementale de publicité foncière et droits d'enregistrement
+  tipp: TIPP
+  allocation_and_stake: Dotations et participations
+  allocation: dotation globale de fonctionnement
+  realignment: attributions de péréquation et de compensation
+  operating_costs: Total des charges de fonctionnement = B
+  operating_real_costs: charges de fonctionnement réelles
+  staff_costs: Charge de personnel (montant net)
+  purchases_and_external_costs: Achats et charges externes (montant net)
+  subsidies_and_contingents: Subventions et contingents
+  mandatory_contributions_and_stakes: contributions obligatoires et participations
+  subsidies: subventions
+  individual_aids: aides à la personne
+  pch: PCH
+  apa: APA
+  rsa: RSA
+  accomodation_costs: frais de séjour et d'hébergement
+  financial_costs: Charges financières
+  net_profit: Résultat comptable = A - B
+  self_financing_capacity: Capacité d'autofinancement brute=CAF
+
+INVESTISSEMENT:
+  debt_repayment_capacity: CAF nette du remboursement en capital des emprunts
+  self_financing_capacity: Capacité d'autofinancement = CAF
+  surplus: Excédent brut de fonctionnement
+
+  investment_ressources: Total des ressources d'investissement budgétaires = C
+  fctva: FCTVA
+  received_subsidies: Subventions d'investissements reçues
+  sold_fixed_assets: Produits des cessions d'immobilisations
+  loans: Emprunts souscrits
+  investments_usage: Total des emplois d'investissement budgétaires = D
+  investments_direct_costs: Dépenses d'investissement directes
+  paid_subsidies: Subventions d'équipement versées
+  debt_repayments: Remboursement en capital des emprunts
+  residual_financing_capacity: Besoin de financement résiduel = D-C
+  financing_capacity: Besoin de financement de la section d'investissement
+  global_profit: Résultat d'ensemble
+
+DETTE:
+  debt_at_end_year: encours des dettes bancaires et assimilées
+  debt_annual_costs: Annuité des dettes bancaires et assimilées
+
+tax:
+  categories:
+    basis: Bases nettes imposées
+    cuts_on_deliberation: Réductions de bases accordées sur délibérations
+    value: Produits des impôts locaux
+    rate: Taux voté
+  types:
+    home_tax: Taxe d'habitation
+    property_tax: Taxe foncière sur les propriétés bâties
+    land_property_tax: Taxe foncière sur les propriétés non bâties
+    business_tax: Taxe professionnelle

@@ -10,17 +10,18 @@ from scrapy.selector import HtmlXPathSelector
 from scrapy.http.response.html import HtmlResponse
 
 from localgouv.account_parsing import (
-    CityParser,
-    EPCIParser,
-    DepartmentParser,
-    RegionParser
+    CityZoneParser,
+    EPCIZoneParser,
+    DepartmentZoneParser,
+    RegionZoneParser
 )
+
 
 def get_response(filepath, encoding='utf-8'):
     body = open(filepath, 'r').read()
-    response = HtmlResponse('test', encoding=encoding)
-    response.body = body
+    response = HtmlResponse('test', encoding=encoding, body=body)
     return response
+"""
 
 class CommuneParsingTestCase(unittest2.TestCase):
     def setUp(self):
@@ -88,7 +89,7 @@ class CommuneParsingTestCase(unittest2.TestCase):
         }
 
     def test_parsing(self):
-        parser = CityParser('', 2012, '')
+        parser = CityZoneParser('', 2012, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         for key, val in self.data.items():
             self.assertAlmostEqual(data[key], val)
@@ -142,7 +143,7 @@ class Commune2000ParsingTestCase(unittest2.TestCase):
         }
 
     def test_parsing(self):
-        parser = CityParser('', 2000, '')
+        parser = CityZoneParser('', 2000, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         for key, val in self.data.items():
             self.assertAlmostEqual(data[key], val)
@@ -160,7 +161,7 @@ class Commune2009ParsingTestCase(unittest2.TestCase):
         }
 
     def test_parsing(self):
-        parser = CityParser('', 2009, '')
+        parser = CityZoneParser('', 2009, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         for key, val in self.data.items():
             self.assertAlmostEqual(data[key], val)
@@ -171,7 +172,7 @@ class EPCIFinanceParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = EPCIParser('', 2012, '')
+        parser = EPCIZoneParser('', 2012, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         self.assertEqual(data['population'], 2701)
         # test data parsed from first table
@@ -197,7 +198,7 @@ class EPCIFinance2010ParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = EPCIParser('', 2010, '')
+        parser = EPCIZoneParser('', 2010, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         for key in ['property_tax_basis', 'property_tax_value',
                     'home_tax_value', 'property_tax_rate', 'home_tax_rate',
@@ -213,7 +214,7 @@ class EPCIFinance2008ParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = EPCIParser('', 2008, '')
+        parser = EPCIZoneParser('', 2008, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         for key in ['property_tax_basis', 'property_tax_value',
                     'home_tax_value', 'property_tax_rate', 'home_tax_rate',
@@ -227,7 +228,7 @@ class DepartmentFinanceParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = DepartmentParser('', 2012, '')
+        parser = DepartmentZoneParser('', 2012, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         self.assertEqual(data['allocation'], 52327 * 1e3)
         self.assertEqual(data['name'], 'CANTAL')
@@ -249,7 +250,7 @@ class DepartmentFinance2011ParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = DepartmentParser('', 2011, '')
+        parser = DepartmentZoneParser('', 2011, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         for key in ['tipp', 'property_tax_basis', 'property_tax_value',
                     'property_tax_cuts_on_deliberation', 'property_tax_rate',
@@ -263,37 +264,85 @@ class DepartmentFinance2010ParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = DepartmentParser('', 2010, '')
+        parser = DepartmentZoneParser('', 2010, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         for key in ['tipp', 'property_tax_basis', 'property_tax_value',
                     'compensation_2010_value', 'home_tax_value',
                     'property_tax_rate', 'home_tax_rate']:
             self.assertTrue(key in data)
 
+
+"""
+
+
 class DepartmentFinance2009ParsingTestCase(unittest2.TestCase):
     def setUp(self):
-        self.response = get_response('data/department_2009_account.html',
+        self.response = get_response('test/data/department_2009_account.html',
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = DepartmentParser('', 2009, '')
+        parser = DepartmentZoneParser('', 2009, '')
         data = parser.parse(HtmlXPathSelector(self.response))
-        for key in ['tipp', 'property_tax_basis', 'property_tax_value',
-                    'business_tax_value', 'home_tax_value',
-                    'property_tax_rate', 'home_tax_rate']:
-            self.assertTrue(key in data)
+        self.assertEqual(data['population'], 537061)
+        self.assertEqual(data['operating_revenues'], 465068000)
+        self.assertEqual(data['operating_real_revenues'], 459748000)
+        self.assertEqual(data['localtax'], 193093000)
+        self.assertEqual(data['refund_tax'], 0)
+        self.assertEqual(data['other_tax'], 99257000)
+        self.assertEqual(data['tipp'], 39185000)
+        self.assertEqual(data['allocation_and_stake'], 158439000)
+        self.assertEqual(data['allocation'], 110390000)
+        self.assertEqual(data['realignment'], 15679000)
+        self.assertEqual(data['operating_costs'], 463765000)
+        self.assertEqual(data['operating_real_costs'], 428409000)
+        self.assertEqual(data['staff_costs'], 86827000)
+        self.assertEqual(data['purchases_and_external_costs'], 57954000)
+        self.assertEqual(data['subsidies_and_contingents'], 272400000)
+        self.assertEqual(data['mandatory_contributions_and_stakes'], 54939000)
+        self.assertEqual(data['subsidies'], 16009000)
+        self.assertEqual(data['individual_aids'], 113380000)
+        self.assertEqual(data['pch'], 7565000)
+        self.assertEqual(data['apa'], 45375000)
+        self.assertEqual(data['rsa'], 28671000)
+        self.assertEqual(data['accomodation_costs'], 79145000)
+        self.assertEqual(data['financial_costs'], 10238000)
+        self.assertEqual(data['net_profit'], 1303000)
+        self.assertEqual(data['self_financing_capacity'], 31339000)
+        self.assertEqual(data['debt_at_end_year'], 294726000)
+        self.assertEqual(data['debt_annual_costs'], 26249000)
+        self.assertEqual(data['home_tax_value'], 52485000)
+        self.assertEqual(data['home_tax_basis'], 457175000)
+        self.assertAlmostEqual(data['home_tax_rate'], 0.1148)
+        self.assertEqual(data['home_tax_cuts_on_deliberation'], 0)
+        self.assertEqual(data['property_tax_value'], 62591000)
+        self.assertEqual(data['property_tax_basis'], 403301000)
+        self.assertAlmostEqual(data['property_tax_rate'], 0.1552)
+        self.assertEqual(data['property_tax_cuts_on_deliberation'], 33000)
+        self.assertEqual(data['land_property_tax_value'], 596000)
+        self.assertEqual(data['land_property_tax_basis'], 1775000)
+        self.assertAlmostEqual(data['land_property_tax_rate'], 0.3363)
+        self.assertEqual(data['land_property_tax_cuts_on_deliberation'], 0)
+        self.assertEqual(data['business_tax_value'], 75344000)
+        self.assertEqual(data['business_tax_basis'], 839954000)
+        self.assertAlmostEqual(data['business_tax_rate'], 0.0897)
+        self.assertEqual(data['business_tax_cuts_on_deliberation'], 3937000)
 
+
+
+
+"""
 class DepartmentFinance2008ParsingTestCase(unittest2.TestCase):
     def setUp(self):
-        self.response = get_response('data/department_2008_account.html',
+        self.response = get_response('test/data/department_2008_account.html',
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = DepartmentParser('', 2008, '')
+        parser = DepartmentZoneParser('', 2008, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         for key in ['tipp', 'property_tax_basis', 'property_tax_value',
                     'property_tax_rate', 'home_tax_rate', 'business_tax_rate']:
             self.assertTrue(key in data)
+
 
 class RegionFinanceParsingTestCase(unittest2.TestCase):
     def setUp(self):
@@ -301,7 +350,7 @@ class RegionFinanceParsingTestCase(unittest2.TestCase):
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = RegionParser('', 2012, '')
+        parser = RegionZoneParser('', 2012, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         self.assertTrue('allocation' in data)
         self.assertEqual(data['name'], 'REGION BASSE-NORMANDIE')
@@ -316,13 +365,14 @@ class RegionFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['business_profit_contribution_value'], 64681000)
         self.assertEqual(data['business_profit_contribution_cuts_on_deliberation'], 288000)
 
+
 class RegionFinance2008ParsingTestCase(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('data/region_2008_account.html',
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = RegionParser('', 2008, '')
+        parser = RegionZoneParser('', 2008, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         self.assertTrue('allocation' in data)
         self.assertEqual(data['name'], 'REGION BASSE-NORMANDIE')
@@ -341,13 +391,14 @@ class RegionFinance2008ParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['business_tax_value'], 85439 * 1e3)
         self.assertEqual(data['business_tax_rate'], 0.0318)
 
+
 class RegionFinance2009ParsingTestCase(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('data/region_2009_account.html',
                                      encoding='windows-1252')
 
     def test_parsing(self):
-        parser = RegionParser('', 2009, '')
+        parser = RegionZoneParser('', 2009, '')
         data = parser.parse(HtmlXPathSelector(self.response))
         self.assertTrue('allocation' in data)
         # test data parsed from first table
@@ -362,6 +413,37 @@ class RegionFinance2009ParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['business_tax_cuts_on_deliberation'], 40309 * 1e3)
         self.assertEqual(data['business_tax_value'], 88318 * 1e3)
         self.assertEqual(data['business_tax_rate'], 0.0318)
+
+
+class RegionFinance2013ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('data/region_2013_account.html',
+                                     encoding='windows-1252')
+
+    def test_parsing(self):
+        parser = RegionZoneParser('', 2013, '')
+        data = parser.parse(HtmlXPathSelector(self.response))
+
+        print data
+
+        self.assertTrue('allocation' in data)
+
+        self.assertEqual(data['population'], 309693)
+
+        # test data parsed from first table
+        self.assertEqual(data['tipp'], 97982 * 1e3)
+
+        # test data parsed from second table
+        self.assertEqual(data['property_tax_basis'], 1201584 * 1e3)
+        self.assertEqual(data['property_tax_cuts_on_deliberation'], 42 * 1e3)
+        self.assertEqual(data['property_tax_value'], 63566 * 1e3)
+        self.assertEqual(data['property_tax_rate'], 0.0529)
+        self.assertEqual(data['business_tax_basis'], 2777345 * 1e3)
+        self.assertEqual(data['business_tax_cuts_on_deliberation'], 40309 * 1e3)
+        self.assertEqual(data['business_tax_value'], 88318 * 1e3)
+        self.assertEqual(data['business_tax_rate'], 0.0318)
+
+        """
 
 if __name__ == '__main__':
     unittest2.main()

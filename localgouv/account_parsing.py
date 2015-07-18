@@ -1,45 +1,34 @@
 # -*- coding: utf-8 -*-
 
 import re
+import yaml
+import codecs
 
-from .account_network import (
-    city_account,
-    epci_account,
-    department_account,
-    region_account
-)
+from .utils import clean_name
+from .utils import sanitize_value
 
-def sanitize_value(val):
-    """Remove crap from val string and then convert it into float"""
-    val = re.sub(u"(\xa0|\s)", '', val)
-    val = val.replace(',', '.')
 
-    # positive or negative multiplier
-    mult = 1
+class DocumentMapping(object):
+    def __init__(self, yaml_file):
+        self.mapping = yaml.load(codecs.open(yaml_file, 'r', encoding="utf-8"))
+        self.sections = [s.strip().lower() for s in self.mapping.keys()]
 
-    if '-' in val and len(val) > 1:
-        mult = -1
-        val = val.replace('-', '')
-    elif '-' in val:
-        val = '0'
+    def find_node(self, section, name):
+        for key, value in self.mapping[section].items():
+            if name.lower() in value.lower():
+                return key
 
-    if val is not None:
-        if '%' in val:
-            val = float(val.replace('%', ''))
-        return float(val) * mult
+    def find_tax(self, name):
+        for key, value in self.mapping['tax']['types'].items():
+            if name.lower() in value.lower():
+                return key
 
-def sanitize_name(name):
-    return re.sub("(dont|\:|\+)", "", name).strip()
-#
-#
-#
-# Finance Parsers
-#
-#
-#
+    def is_section(self, name):
+        return name.strip().lower() in self.sections
+
 
 class FinanceParser(object):
-     # In the table with financial data, the values we want to scrap are in 
+    # In the table with financial data, the values we want to scrap are in
     # the first columns, the name of the data is in the third column.
     finance_value_icol = 0
     finance_name_icol = 3
@@ -57,7 +46,7 @@ class FinanceParser(object):
 
     def table(self, hxs):
         """Select table where we have name, population, and finance data"""
-        return hxs.select('//body/table[position()=%s]'%self.table_id)
+        return hxs.select('//body/table[position()=%s]' % self.table_id)
 
     def parse(self, hxs):
         # - the value is always in the column finance_value_icol of the table.
@@ -69,7 +58,8 @@ class FinanceParser(object):
             'name': self.name(hxs)
         }
 
-        for tr in self.table(hxs).select('.//tr')[2:]:
+        current_section = None
+        for tr in self.table(hxs).select('.//tr')[1:]:
             # In some weird cases, selecting directly by select('.//td/text()')
             # does not work
             tds = tr.select('.//td')
@@ -85,53 +75,63 @@ class FinanceParser(object):
                         continue
                 else:
                     continue
-            name = sanitize_name(name_td[0])
-            targets = self.account.find_node(name=name)
-            if targets and 'type' not in self.account.nodes[targets[0]]:
-                target = targets[0]
-                try:
-                    value = sanitize_value(tds[self.finance_value_icol]\
-                        .select('.//text()').extract()[0]) * 1000
-                    if value is not None:
-                        data[target] = value
-                except IndexError:
-                    print "no value for node %s "%name
+
+            name = clean_name(name_td[0])
+
+            if self.account.is_section(name):
+                current_section = name
             else:
-                print "There is no node of name %s "%name
+                target = self.account.find_node(current_section, name)
+                if target:
+                    try:
+                        value = sanitize_value(tds[self.finance_value_icol].select('.//text()').extract()[0]) * 1000
+                        if value is not None:
+                            data[target] = value
+                    except IndexError:
+                        print "no value for node %s " % name
+                else:
+                    print "There is no node of name %s " % name
 
         return data
+
 
 class DepartmentFinanceParser(FinanceParser):
     table_id = 5
     finance_value_icol = 1
     finance_name_icol = 0
+
     def name(self, hxs):
-        xpath =  '//body/table[position()=3]/tr[position()=1]/td/span/text()'
+        xpath = '//body/table[position()=3]/tr[position()=1]/td/span/text()'
         text = hxs.select(xpath).extract()[0]
         print re.split('SITUATION FINANCIERE du DEPARTEMENT (de|du) ', text)[-1]
         return re.split('SITUATION FINANCIERE du DEPARTEMENT (de|du) ', text)[-1]
 
     def population(self, hxs):
-        xpath =  '//body/table[position()=4]/tr[position()=1]/td/text()'
+        xpath = '//body/table[position()=4]/tr[position()=1]/td/text()'
         pop = hxs.select(xpath).re(r': ([\d\s]+)\xa0')[0]
         return int(pop.replace(' ', ''))
 
+
 class RegionFinanceParser(DepartmentFinanceParser):
     def name(self, hxs):
-        xpath =  '//body/table[position()=3]/tr[position()=1]/td/span/text()'
+        xpath = '//body/table[position()=3]/tr[position()=1]/td/span/text()'
         name = hxs.select(xpath).extract()[0]
         return name.split('SITUATION FINANCIERE de la ')[1].strip()
 
+
 class CityFinanceParser(FinanceParser):
     tr_name_position = 3
+
     def population(self, hxs):
-        pop = self.table(hxs).select('.//tr[position()=%s]'%self.tr_name_position)
+        pop = self.table(hxs).select('.//tr[position()=%s]' % self.tr_name_position)
         pop = pop.re(r': ([\d\s]+) habitants')[0]
         return int(pop.replace(' ', ''))
+
 
 class EPCIFinanceParser(CityFinanceParser):
     finance_name_icol = 2
     tr_name_position = 2
+
 
 #
 #
@@ -142,6 +142,7 @@ class EPCIFinanceParser(CityFinanceParser):
 #
 #
 
+
 class TaxInfo(object):
     def __init__(self, name, start_row, end_row, name_col, value_col):
         self.name = name
@@ -149,6 +150,7 @@ class TaxInfo(object):
         self.end_row = end_row
         self.name_col = name_col
         self.value_col = value_col
+
 
 class TaxInfoParser(object):
     def __init__(self, account, taxinfo):
@@ -162,35 +164,38 @@ class TaxInfoParser(object):
             tds = row.select('.//td')
             if len(tds) <= max(taxinfo.value_col, taxinfo.name_col):
                 continue
-            name = sanitize_name(tds[taxinfo.name_col].select('./text()').extract()[0])
-            targets = self.account.find_node(name=name, type='section')
-            if targets:
-                target = targets[0]
+            name = clean_name(tds[taxinfo.name_col].select('./text()').extract()[0])
+
+            target = self.account.find_tax(name)
+
+            if target:
                 str_val = tds[taxinfo.value_col].select('./text()').extract()[0].strip()
                 try:
                     val = sanitize_value(str_val)
                 except ValueError:
-                    print u"There is no valid value for the node %s"%target
+                    print u"There is no valid value for the node %s" % target
                     continue
                 if taxinfo.name == 'rate':
-                    val = val / 100.
+                    val /= 100.
                 else:
-                    val = val * 1000
-                key = "%s_%s"%(target,taxinfo.name)
+                    val *= 1000
+                key = "%s_%s" % (target, taxinfo.name)
                 data[key] = val
             else:
-                print "There is no node of name %s "%name
+                print "There is no node of name %s " % name
         return data
+
 
 class TaxParser(object):
     table_id = 4
+    _infos = []
 
     def __init__(self, account):
         self.account = account
 
     def table(self, hxs):
         """Select table where we have tax data"""
-        return hxs.select('//body/table[position()=%s]'%self.table_id)
+        return hxs.select('//body/table[position()=%s]' % self.table_id)
 
     @property
     def infos(self):
@@ -203,12 +208,14 @@ class TaxParser(object):
             data.update(parser.parse(self.table(hxs)))
         return data
 
+
 class RegTaxParserAfter2011(TaxParser):
     table_id = 6
     _infos = [
         TaxInfo('cuts_on_deliberation', 3, 4, 1, 0),
         TaxInfo('value', 6, 8, 1, 0),
     ]
+
 
 class RegTaxParser20092010(RegTaxParserAfter2011):
     _infos = [
@@ -218,6 +225,7 @@ class RegTaxParser20092010(RegTaxParserAfter2011):
         TaxInfo('rate', 8, 12, 3, 4),
     ]
 
+
 class RegTaxParser2008(RegTaxParserAfter2011):
     _infos = [
         TaxInfo('basis', 4, 7, 2, 0),
@@ -226,6 +234,7 @@ class RegTaxParser2008(RegTaxParserAfter2011):
         TaxInfo('rate', 9, 13, 3, 4),
         TaxInfo('value', 11, 13, 2, 0),
     ]
+
 
 class DepTaxParser(TaxParser):
     table_id = 6
@@ -237,12 +246,15 @@ class DepTaxParser(TaxParser):
         TaxInfo('value', 11, 13, 1, 0),
     ]
 
+
 class DepTax20092010Parser(DepTaxParser):
     _infos = [
         TaxInfo('basis', 4, 8, 3, 0),
         TaxInfo('value', 9, 14, 3, 0),
         TaxInfo('rate', 9, 14, 3, 4),
+        TaxInfo('cuts_on_deliberation', 4, 8, 3, 4),
     ]
+
 
 class DepTax2008Parser(DepTaxParser):
     _infos = [
@@ -250,6 +262,7 @@ class DepTax2008Parser(DepTaxParser):
         TaxInfo('value', 9, 14, 3, 0),
         TaxInfo('rate', 9, 14, 3, 4),
     ]
+
 
 class EPCITaxParser(TaxParser):
     _infos = [
@@ -260,6 +273,7 @@ class EPCITaxParser(TaxParser):
         TaxInfo('value', 22, 25, 2, 0),
     ]
 
+
 class EPCI2010TaxParser(TaxParser):
     _infos = [
         TaxInfo('basis', 4, 10, 2, 0),
@@ -269,12 +283,14 @@ class EPCI2010TaxParser(TaxParser):
         TaxInfo('value', 18, 21, 2, 0),
     ]
 
+
 class EPCI2008TaxParser(TaxParser):
     _infos = [
         TaxInfo('basis', 4, 9, 1, 0),
         TaxInfo('value', 12, 18, 2, 0),
         TaxInfo('rate', 12, 18, 2, 3),
     ]
+
 
 class CityTaxParser(TaxParser):
     _infos = [
@@ -286,12 +302,14 @@ class CityTaxParser(TaxParser):
         TaxInfo('value', 18, 21, 3, 0),
     ]
 
+
 class CityBefore2008TaxParser(TaxParser):
     table_id = 3
     _infos = [
         TaxInfo('value', 20, 24, 3, 0),
         TaxInfo('rate', 20, 24, 3, 4),
     ]
+
 
 #
 #
@@ -302,9 +320,7 @@ class CityBefore2008TaxParser(TaxParser):
 #
 
 
-
-
-class BaseParser(object):
+class BaseZoneParser(object):
     zone_type = ''
     account = None
     finance_table_id = 3
@@ -331,9 +347,9 @@ class BaseParser(object):
         return data
 
 
-class RegionParser(BaseParser):
+class RegionZoneParser(BaseZoneParser):
     zone_type = 'region'
-    account = region_account
+    account = None
     finance_parser_cls = RegionFinanceParser
 
     @property
@@ -345,9 +361,10 @@ class RegionParser(BaseParser):
         else:
             return RegTaxParserAfter2011(self.account)
 
-class DepartmentParser(BaseParser):
+
+class DepartmentZoneParser(BaseZoneParser):
     zone_type = 'department'
-    account = department_account
+    account = DocumentMapping("data/mapping/department_2009.yaml")
     finance_parser_cls = DepartmentFinanceParser
 
     @property
@@ -359,9 +376,10 @@ class DepartmentParser(BaseParser):
         else:
             return DepTax2008Parser(self.account)
 
-class EPCIParser(BaseParser):
+
+class EPCIZoneParser(BaseZoneParser):
     zone_type = 'epci'
-    account = epci_account
+    account = None
     finance_parser_cls = EPCIFinanceParser
 
     def __init__(self, siren, year, url):
@@ -379,10 +397,11 @@ class EPCIParser(BaseParser):
         else:
             return EPCITaxParser(self.account)
 
-class CityParser(BaseParser):
+
+class CityZoneParser(BaseZoneParser):
     """Parser of city html page"""
     zone_type = 'city'
-    account = city_account
+    account = None
     finance_parser_cls = CityFinanceParser
 
     @property
