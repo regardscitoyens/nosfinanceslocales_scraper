@@ -6,10 +6,10 @@ import unittest2
 from unipath import Path
 sys.path.append(Path(__file__).ancestor(2))
 
-from scrapy.selector import HtmlXPathSelector
+from scrapy.selector import Selector
 from scrapy.http.response.html import HtmlResponse
 
-from localfinance.account_parsing import (
+from localfinance.parsing import (
     CityZoneParser,
     EPCIZoneParser,
     DepartmentZoneParser,
@@ -21,11 +21,11 @@ def get_response(filepath, encoding='utf-8'):
     body = open(filepath, 'r').read()
     response = HtmlResponse('test', encoding=encoding, body=body)
     return response
-"""
 
-class CommuneParsingTestCase(unittest2.TestCase):
+
+class Commune2012ParsingTestCase(unittest2.TestCase):
     def setUp(self):
-        self.response = get_response('data/commune_2012_account.html')
+        self.response = get_response('test/data/commune_2012_account.html')
         self.data = {
             'name': 'AILLANT-SUR-MILLERON',
             'population': 394,
@@ -90,10 +90,11 @@ class CommuneParsingTestCase(unittest2.TestCase):
 
     def test_parsing(self):
         parser = CityZoneParser('', 2012, '')
-        data = parser.parse(HtmlXPathSelector(self.response))
+        data = parser.parse(Selector(self.response))
         for key, val in self.data.items():
             self.assertAlmostEqual(data[key], val)
 
+"""
 class Commune2000ParsingTestCase(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('data/commune_2000_account.html', encoding='windows-1252')
@@ -277,56 +278,58 @@ class DepartmentFinance2010ParsingTestCase(unittest2.TestCase):
 
 class DepartmentFinance2009ParsingTestCase(unittest2.TestCase):
     def setUp(self):
-        self.response = get_response('test/data/department_2009_account.html',
-                                     encoding='windows-1252')
+        self.response = get_response('test/data/department_2009_account.html', encoding='windows-1252')
+        self.data = {
+            'population': 537061,
+            'operating_revenues': 465068000,
+            'operating_real_revenues': 459748000,
+            'localtax': 193093000,
+            'refund_tax': 0,
+            'other_tax': 99257000,
+            'tipp': 39185000,
+            'allocation_and_stake': 158439000,
+            'allocation': 110390000,
+            'realignment': 15679000,
+            'operating_costs': 463765000,
+            'operating_real_costs': 428409000,
+            'staff_costs': 86827000,
+            'purchases_and_external_costs': 57954000,
+            'subsidies_and_contingents': 272400000,
+            'mandatory_contributions_and_stakes': 54939000,
+            'subsidies': 16009000,
+            'individual_aids': 113380000,
+            'pch': 7565000,
+            'apa': 45375000,
+            'rsa': 28671000,
+            'accomodation_costs': 79145000,
+            'financial_costs': 10238000,
+            'net_profit': 1303000,
+            'self_financing_capacity': 31339000,
+            'debt_at_end_year': 294726000,
+            'debt_annual_costs': 26249000,
+            'home_tax_value': 52485000,
+            'home_tax_basis': 457175000,
+            'home_tax_rate': 0.1148,
+            'home_tax_cuts_on_deliberation': 0,
+            'property_tax_value': 62591000,
+            'property_tax_basis': 403301000,
+            'property_tax_rate': 0.1552,
+            'property_tax_cuts_on_deliberation': 33000,
+            'land_property_tax_value': 596000,
+            'land_property_tax_basis': 1775000,
+            'land_property_tax_rate': 0.3363,
+            'land_property_tax_cuts_on_deliberation': 0,
+            'business_tax_value': 75344000,
+            'business_tax_basis': 839954000,
+            'business_tax_rate': 0.0897,
+            'business_tax_cuts_on_deliberation': 3937000,
+        }
 
     def test_parsing(self):
         parser = DepartmentZoneParser('', 2009, '')
-        data = parser.parse(HtmlXPathSelector(self.response))
-        self.assertEqual(data['population'], 537061)
-        self.assertEqual(data['operating_revenues'], 465068000)
-        self.assertEqual(data['operating_real_revenues'], 459748000)
-        self.assertEqual(data['localtax'], 193093000)
-        self.assertEqual(data['refund_tax'], 0)
-        self.assertEqual(data['other_tax'], 99257000)
-        self.assertEqual(data['tipp'], 39185000)
-        self.assertEqual(data['allocation_and_stake'], 158439000)
-        self.assertEqual(data['allocation'], 110390000)
-        self.assertEqual(data['realignment'], 15679000)
-        self.assertEqual(data['operating_costs'], 463765000)
-        self.assertEqual(data['operating_real_costs'], 428409000)
-        self.assertEqual(data['staff_costs'], 86827000)
-        self.assertEqual(data['purchases_and_external_costs'], 57954000)
-        self.assertEqual(data['subsidies_and_contingents'], 272400000)
-        self.assertEqual(data['mandatory_contributions_and_stakes'], 54939000)
-        self.assertEqual(data['subsidies'], 16009000)
-        self.assertEqual(data['individual_aids'], 113380000)
-        self.assertEqual(data['pch'], 7565000)
-        self.assertEqual(data['apa'], 45375000)
-        self.assertEqual(data['rsa'], 28671000)
-        self.assertEqual(data['accomodation_costs'], 79145000)
-        self.assertEqual(data['financial_costs'], 10238000)
-        self.assertEqual(data['net_profit'], 1303000)
-        self.assertEqual(data['self_financing_capacity'], 31339000)
-        self.assertEqual(data['debt_at_end_year'], 294726000)
-        self.assertEqual(data['debt_annual_costs'], 26249000)
-        self.assertEqual(data['home_tax_value'], 52485000)
-        self.assertEqual(data['home_tax_basis'], 457175000)
-        self.assertAlmostEqual(data['home_tax_rate'], 0.1148)
-        self.assertEqual(data['home_tax_cuts_on_deliberation'], 0)
-        self.assertEqual(data['property_tax_value'], 62591000)
-        self.assertEqual(data['property_tax_basis'], 403301000)
-        self.assertAlmostEqual(data['property_tax_rate'], 0.1552)
-        self.assertEqual(data['property_tax_cuts_on_deliberation'], 33000)
-        self.assertEqual(data['land_property_tax_value'], 596000)
-        self.assertEqual(data['land_property_tax_basis'], 1775000)
-        self.assertAlmostEqual(data['land_property_tax_rate'], 0.3363)
-        self.assertEqual(data['land_property_tax_cuts_on_deliberation'], 0)
-        self.assertEqual(data['business_tax_value'], 75344000)
-        self.assertEqual(data['business_tax_basis'], 839954000)
-        self.assertAlmostEqual(data['business_tax_rate'], 0.0897)
-        self.assertEqual(data['business_tax_cuts_on_deliberation'], 3937000)
-
+        data = parser.parse(Selector(self.response))
+        for key, val in self.data.items():
+            self.assertAlmostEqual(data[key], val)
 
 
 

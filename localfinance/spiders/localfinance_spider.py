@@ -6,7 +6,7 @@ import re
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 
-from ..account_parsing import (
+from ..parsing import (
     CityZoneParser,
     EPCIZoneParser,
     DepartmentZoneParser,
@@ -14,10 +14,7 @@ from ..account_parsing import (
 )
 
 from ..item import (
-    CityFinancialData,
-    EPCIFinancialData,
-    DepartmentFinancialData,
-    RegionFinancialData
+    FinancialData
 )
 
 

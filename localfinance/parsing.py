@@ -4,6 +4,8 @@ import re
 import yaml
 import codecs
 
+from difflib import SequenceMatcher
+
 from .utils import clean_name
 from .utils import sanitize_value
 
@@ -14,14 +16,20 @@ class DocumentMapping(object):
         self.sections = [s.strip().lower() for s in self.mapping.keys()]
 
     def find_node(self, section, name):
+        if not section or section not in self.mapping:
+            return None
+
         for key, value in self.mapping[section].items():
             if name.lower() in value.lower():
                 return key
 
     def find_tax(self, name):
+        taxes = []
         for key, value in self.mapping['tax']['types'].items():
-            if name.lower() in value.lower():
-                return key
+            s = SequenceMatcher(None, name.lower(), value.lower())
+            if s.ratio() > 0.5:
+                taxes.append((s.ratio(), key))
+        return sorted(taxes)[-1][1] if taxes else []
 
     def is_section(self, name):
         return name.strip().lower() in self.sections
@@ -39,14 +47,14 @@ class FinanceParser(object):
         self.account = account
 
     def name(self, hxs):
-        return self.table(hxs).select('.//tr[position()=2]/td[position()=2]/text()').extract()[0]
+        return self.table(hxs).xpath('.//tr[position()=2]/td[position()=2]/text()').extract()[0]
 
     def population(self, hxs):
         raise NotImplementedError
 
     def table(self, hxs):
         """Select table where we have name, population, and finance data"""
-        return hxs.select('//body/table[position()=%s]' % self.table_id)
+        return hxs.xpath('//body/table[position()=%s]' % self.table_id)
 
     def parse(self, hxs):
         # - the value is always in the column finance_value_icol of the table.
@@ -59,38 +67,44 @@ class FinanceParser(object):
         }
 
         current_section = None
-        for tr in self.table(hxs).select('.//tr')[1:]:
-            # In some weird cases, selecting directly by select('.//td/text()')
-            # does not work
-            tds = tr.select('.//td')
-            if len(tds) <= self.finance_name_icol:
-                continue
 
-            name_td = tds[self.finance_name_icol].select('.//text()').extract()
-            if not name_td or not name_td[0].strip():
-                ths = tr.select('.//th')
-                if ths:
-                    name_td = ths[0].select('.//text()').extract()
-                    if not name_td:
-                        continue
-                else:
+        for tr in self.table(hxs).xpath('.//tr')[1:]:
+            ths = tr.xpath('.//th')
+
+            if len(ths) == 1:
+                section = ths[0].xpath('.//text()').extract()[0]
+                if self.account.is_section(section):
+                    current_section = section
                     continue
 
-            name = clean_name(name_td[0])
+                if not self.account.find_node(current_section, section):
+                    continue
 
-            if self.account.is_section(name):
-                current_section = name
-            else:
-                target = self.account.find_node(current_section, name)
-                if target:
-                    try:
-                        value = sanitize_value(tds[self.finance_value_icol].select('.//text()').extract()[0]) * 1000
-                        if value is not None:
-                            data[target] = value
-                    except IndexError:
-                        print "no value for node %s " % name
-                else:
-                    print "There is no node of name %s " % name
+            # In some weird cases, selecting directly by select('.//td/text()')
+            # does not work
+            tds = tr.xpath('.//td')
+
+            if len(tds) < 4:
+                continue
+
+            names = [n.strip() for n in tds[self.finance_name_icol].xpath('.//text()').extract() if n.strip()]
+
+            # if there are no names in td tags, try to find some in th tags
+            if not names:
+                names = [n.strip() for n in ths[0].xpath('.//text()').extract() if n.strip()]
+
+            if not names:
+                continue
+
+            name = clean_name(names[0])
+            target = self.account.find_node(current_section, name)
+            if target:
+                try:
+                    value = sanitize_value(tds[self.finance_value_icol].xpath('.//text()').extract()[0]) * 1000
+                    if value is not None:
+                        data[target] = value
+                except IndexError:
+                    print "no value for node %s " % name
 
         return data
 
@@ -102,20 +116,19 @@ class DepartmentFinanceParser(FinanceParser):
 
     def name(self, hxs):
         xpath = '//body/table[position()=3]/tr[position()=1]/td/span/text()'
-        text = hxs.select(xpath).extract()[0]
-        print re.split('SITUATION FINANCIERE du DEPARTEMENT (de|du) ', text)[-1]
+        text = hxs.xpath(xpath).extract()[0]
         return re.split('SITUATION FINANCIERE du DEPARTEMENT (de|du) ', text)[-1]
 
     def population(self, hxs):
         xpath = '//body/table[position()=4]/tr[position()=1]/td/text()'
-        pop = hxs.select(xpath).re(r': ([\d\s]+)\xa0')[0]
+        pop = hxs.xpath(xpath).re(r': ([\d\s]+)\xa0')[0]
         return int(pop.replace(' ', ''))
 
 
 class RegionFinanceParser(DepartmentFinanceParser):
     def name(self, hxs):
         xpath = '//body/table[position()=3]/tr[position()=1]/td/span/text()'
-        name = hxs.select(xpath).extract()[0]
+        name = hxs.xpath(xpath).extract()[0]
         return name.split('SITUATION FINANCIERE de la ')[1].strip()
 
 
@@ -123,7 +136,7 @@ class CityFinanceParser(FinanceParser):
     tr_name_position = 3
 
     def population(self, hxs):
-        pop = self.table(hxs).select('.//tr[position()=%s]' % self.tr_name_position)
+        pop = self.table(hxs).xpath('.//tr[position()=%s]' % self.tr_name_position)
         pop = pop.re(r': ([\d\s]+) habitants')[0]
         return int(pop.replace(' ', ''))
 
@@ -131,16 +144,6 @@ class CityFinanceParser(FinanceParser):
 class EPCIFinanceParser(CityFinanceParser):
     finance_name_icol = 2
     tr_name_position = 2
-
-
-#
-#
-#
-#
-# Tax parsing: much more complicated
-#
-#
-#
 
 
 class TaxInfo(object):
@@ -160,20 +163,22 @@ class TaxInfoParser(object):
     def parse(self, hxs):
         data = {}
         taxinfo = self.taxinfo
-        for row in hxs.select('.//tr')[taxinfo.start_row:taxinfo.end_row]:
-            tds = row.select('.//td')
+        for row in hxs.xpath('.//tr')[taxinfo.start_row:taxinfo.end_row]:
+            tds = row.xpath('.//td')
+
             if len(tds) <= max(taxinfo.value_col, taxinfo.name_col):
                 continue
-            name = clean_name(tds[taxinfo.name_col].select('./text()').extract()[0])
+
+            name = clean_name(tds[taxinfo.name_col].xpath('./text()').extract()[0])
 
             target = self.account.find_tax(name)
 
             if target:
-                str_val = tds[taxinfo.value_col].select('./text()').extract()[0].strip()
+                str_val = tds[taxinfo.value_col].xpath('./text()').extract()[0].strip()
                 try:
                     val = sanitize_value(str_val)
                 except ValueError:
-                    print u"There is no valid value for the node %s" % target
+                    print u"There is no valid value for the node %s - %s" % (target, str_val)
                     continue
                 if taxinfo.name == 'rate':
                     val /= 100.
@@ -181,8 +186,7 @@ class TaxInfoParser(object):
                     val *= 1000
                 key = "%s_%s" % (target, taxinfo.name)
                 data[key] = val
-            else:
-                print "There is no node of name %s " % name
+
         return data
 
 
@@ -195,7 +199,7 @@ class TaxParser(object):
 
     def table(self, hxs):
         """Select table where we have tax data"""
-        return hxs.select('//body/table[position()=%s]' % self.table_id)
+        return hxs.xpath('//body/table[position()=%s]' % self.table_id)
 
     @property
     def infos(self):
@@ -311,15 +315,6 @@ class CityBefore2008TaxParser(TaxParser):
     ]
 
 
-#
-#
-#
-# Zone Parser: parse finance and tax
-#
-#
-#
-
-
 class BaseZoneParser(object):
     zone_type = ''
     account = None
@@ -401,7 +396,7 @@ class EPCIZoneParser(BaseZoneParser):
 class CityZoneParser(BaseZoneParser):
     """Parser of city html page"""
     zone_type = 'city'
-    account = None
+    account = DocumentMapping("data/mapping/city_2012.yaml")
     finance_parser_cls = CityFinanceParser
 
     @property

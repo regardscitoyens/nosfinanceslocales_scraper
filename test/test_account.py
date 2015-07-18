@@ -6,7 +6,7 @@ import unittest2
 from unipath import Path
 sys.path.append(Path(__file__).ancestor(2))
 
-from localfinance.account_parsing import DocumentMapping
+from localfinance.parsing import DocumentMapping
 
 """
 class AccountTestCase(unittest2.TestCase):
