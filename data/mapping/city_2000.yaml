@@ -1,0 +1,49 @@
+OPERATIONS DE FONCTIONNEMENT:
+  operating_revenues: TOTAL DES PRODUITS DE FONCTIONNEMENT = A
+  localtax: Impôts Locaux
+  other_tax: Autres impôts et taxes
+  allocation: Dotation globale de fonctionnement
+  operating_costs: TOTAL DES CHARGES DE FONCTIONNEMENT = B
+  staff_costs: Charges de personnel
+  purchases_and_external_costs: Achats et charges externes
+  financial_costs: Charges financières
+  contingents: Contingents
+  paid_subsidies: Subventions versées
+  net_profit: RESULTAT COMPTABLE = A - B = R
+
+OPERATIONS D'INVESTISSEMENT:
+  investment_ressources: TOTAL DES RESSOURCES D'INVESTISSEMENT = C
+  loans: Emprunts bancaires et dettes assimilées
+  received_subsidies: Subventions reçues
+  fctva: FCTVA
+  returned_properties: Retour de biens affectés, concédés, ...
+  investments_usage: TOTAL DES EMPLOIS D'INVESTISSEMENT = D
+  facilities_expenses: Dépenses d'équipement
+  debt_repayments: Remboursement d'emprunts et dettes assimilées
+  costs_to_allocate: Charges à répartir
+  fixed_assets: Immobilisations affectées, concédées, ...
+  residual_financing_capacity: Besoin ou capacité de financement Résiduel de la section d'investissement = D - C
+  thirdparty_balance: Solde des opérations pour le compte de tiers
+  financing_capacity: = Besoin ou capacité de financement de la section d'investissement = E
+  global_profit: Résultat d'ensemble = R - E
+
+AUTOFINANCEMENT:
+  surplus: Excédent brut de fonctionnement
+  self_financing_capacity: Capacité d'autofinancement = CAF
+  debt_repayment_capacity: CAF nette du remboursement en capital des emprunts
+
+ENDETTEMENT:
+  debt_at_end_year: Encours total de la dette au 31/12/N
+  debt_annual_costs: Annuité de la dette
+  advances_from_treasury: Avances du Trésor au 31/12/N
+  working_capital: FONDS DE ROULEMENT
+
+tax:
+  categories:
+    value: Produits des impôts locaux
+    rate: Taux voté
+  types:
+    home_tax: Produits taxe d'habitation
+    property_tax: Produits foncier bâti
+    land_property_tax: Produits foncier non bâti
+    business_tax: Produits taxe professionnelle
