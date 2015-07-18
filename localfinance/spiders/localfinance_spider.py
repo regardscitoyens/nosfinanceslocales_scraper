@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
 
-import pandas as pd
 import re
 
+import pandas as pd
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 
-from ..parsing import (
+from ..parsing.zone import (
     CityZoneParser,
     EPCIZoneParser,
     DepartmentZoneParser,
     RegionZoneParser
 )
-
-from ..item import (
-    FinancialData
-)
+from ..item import LocalFinance
 
 
 class LocalFinanceSpider(BaseSpider):
@@ -40,15 +37,15 @@ class LocalFinanceSpider(BaseSpider):
             self.start_urls += self.get_epci_urls(year)
 
     def get_dep_urls(self, year):
-        insee_code_file = "./data/depts2013.txt"
+        insee_code_file = "data/locality/depts2013.txt"
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
         data['DEP'] = uniformize_code(data, 'DEP')
         data['DEP'] = convert_dom_code(data)
-        baseurl = "%s/departements/detail.php?dep=%%(DEP)s&exercice=%s"%(self.domain, year)
-        return [baseurl%row for __, row in data.iterrows()]
+        baseurl = "%s/departements/detail.php?dep=%%(DEP)s&exercice=%s" % (self.domain, year)
+        return [baseurl % row for __, row in data.iterrows()]
 
     def get_reg_urls(self, year):
-        insee_code_file = "./data/reg2013.txt"
+        insee_code_file = "data/locality/reg2013.txt"
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
         data['REGION'] = uniformize_code(data, 'REGION')
         # Special case for DOM as usual
@@ -63,20 +60,22 @@ class LocalFinanceSpider(BaseSpider):
                 return '104'
             else:
                 return reg
+
         data['REGION'] = data['REGION'].apply(set_dom_code)
-        baseurl = "%s/regions/detail.php?reg=%%(REGION)s&exercice=%s"%(self.domain, year)
-        return [baseurl%row for __, row in data.iterrows()]
+        baseurl = "%s/regions/detail.php?reg=%%(REGION)s&exercice=%s" % (self.domain, year)
+        return [baseurl % row for __, row in data.iterrows()]
 
     def get_epci_urls(self, year):
         """Build url to crawl from insee file provided here
         http://www.insee.fr/fr/methodes/default.asp?page=zonages/intercommunalite.htm"""
-        xls = pd.ExcelFile('./data/epci-au-01-01-2013.xls')
+        xls = pd.ExcelFile('data/locality/epci-au-01-01-2013.xls')
         data = xls.parse('Composition communale des EPCI')
         data['siren'] = data[u'Établissement public à fiscalité propre'][1:]
         data = data.groupby('siren', as_index=False).first()
         data['dep'] = data[u'Département commune'].apply(get_dep_code_from_com_code)
-        baseurl = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s"%(self.domain, str(year))
-        return [baseurl%row for __, row in data.iterrows()]
+        baseurl = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s" % (
+        self.domain, str(year))
+        return [baseurl % row for __, row in data.iterrows()]
 
     def get_commune_urls(self, year):
         """
@@ -87,7 +86,7 @@ class LocalFinanceSpider(BaseSpider):
         - exercise: year of financial data
         """
 
-        insee_code_file="./data/france2013.txt"
+        insee_code_file = "data/locality/france2013.txt"
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
         # XXX: insee_communes file contains also "cantons", filter out these lines
         mask = data['ACTUAL'].apply(lambda v: v in [1, 2, 3])
@@ -106,8 +105,9 @@ class LocalFinanceSpider(BaseSpider):
 
         data['COM'] = data.apply(convert_city, axis=1)
 
-        baseurl = "%s/communes/eneuro/detail.php?icom=%%(COM)s&dep=%%(DEP)s&type=BPS&param=0&exercice=%s"%(self.domain,str(year))
-        return [baseurl%row for __, row in data.iterrows()]
+        baseurl = "%s/communes/eneuro/detail.php?icom=%%(COM)s&dep=%%(DEP)s&type=BPS&param=0&exercice=%s" % (
+        self.domain, str(year))
+        return [baseurl % row for __, row in data.iterrows()]
 
     def parse(self, response):
         if "/communes/eneuro/detail_gfp.php" in response.url:
@@ -122,51 +122,49 @@ class LocalFinanceSpider(BaseSpider):
     def parse_commune(self, response):
         """Parse the response and return an Account object"""
         hxs = HtmlXPathSelector(response)
-        icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})', response.url).groups()
+        icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})',
+                                    response.url).groups()
+
         # XXX: better to use the real insee code for later analysis, not icom and dep
         # in url.
         real_dep = dict([(val, key) for key, val in DOM_DEP_MAPPING.items()]).get(dep, dep[1:])
         real_com = icom if dep not in DOM_DEP_MAPPING.values() else icom[1:]
-        real_insee_code = real_dep+real_com
+        real_insee_code = real_dep + real_com
+
         # XXX: hack for paris ! \o/
         if real_insee_code == '75101':
             real_insee_code = '75056'
+
         parser = CityZoneParser(real_insee_code, year, response.url)
-        data = parser.parse(hxs)
-        # convert account object to an Item instance.
-        # WHY DO I NEED TO DO THAT SCRAPY ????
-        item = CityFinancialData(data)
-        return item
+
+        return LocalFinance(id=real_insee_code, data=parser.parse(hxs))
 
     def parse_epci(self, response):
         hxs = HtmlXPathSelector(response)
         siren, year = re.search('siren=(\d+)&dep=\w{3}&type=BPS&exercice=(\d{4})', response.url).groups()
         parser = EPCIZoneParser(siren, year, response.url)
-        data = parser.parse(hxs)
-        item = EPCIFinancialData(data)
-        return item
+
+        return LocalFinance(id=siren, data=parser.parse(hxs))
 
     def parse_dep(self, response):
         hxs = HtmlXPathSelector(response)
         dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
         parser = DepartmentZoneParser(str(int(dep)), year, response.url)
-        data = parser.parse(hxs)
-        item = DepartmentFinancialData(data)
-        return item
+
+        return LocalFinance(id=dep, data=parser.parse(hxs))
 
     def parse_reg(self, response):
         hxs = HtmlXPathSelector(response)
         dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
         parser = RegionZoneParser(dep, year, response.url)
-        data = parser.parse(hxs)
-        item = RegionFinancialData(data)
-        return item
+        return LocalFinance(id=dep, data=parser.parse(hxs))
 
 
 def uniformize_code(df, column):
     # Uniformize dep code and commune code to be on a string of length 3.
     def _uniformize_code(code):
-        return ("00%s"%code)[-3:]
+        return ("00%s" % code)[-3:]
+
     return df[column].apply(_uniformize_code)
 
 
@@ -189,7 +187,7 @@ def convert_dom_code(df, column='DEP'):
 
 
 def get_dep_code_from_com_code(com):
-    return DOM_DEP_MAPPING.get(str(com[:3]), ('0%s'%com)[:3])
+    return DOM_DEP_MAPPING.get(str(com[:3]), ('0%s' % com)[:3])
 
 # Another strange thing, DOM cities have an insee_code on 2 digits in the
 # insee file. We need to add a third digit before these two to crawl the

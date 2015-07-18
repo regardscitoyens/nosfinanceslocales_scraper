@@ -4,14 +4,7 @@ import sys, os
 sys.path.append(os.path.abspath('.'))
 import pandas as pd
 
-from localfinance.account_network import (
-    city_account,
-    region_account,
-    department_account,
-    city_account,
-    epci_account
-)
-
+"""
 csvfile = sys.argv[1]
 zone_type = sys.argv[2]
 
@@ -59,3 +52,4 @@ for column in df.columns.tolist():
 outputdf = df[sorted(fr_columns)]
 outputdf.to_csv(csvoutput, index=False, encoding='utf-8')
 
+"""

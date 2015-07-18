@@ -26,7 +26,7 @@ Usage
 To scrap data of a give zone type (city, epci, department or region) on a given fiscal
 year YYYY, run in the root dir:
 
-`scrapy crawl localgouv -o scraped_data_dir/zonetype_YYYY.json -t csv -a year=YYYY`
+`scrapy crawl localfinance -o scraped_data_dir/zonetype_YYYY.json -t csv -a year=YYYY` -a zone_type=zonetype
 
 To scrap data for all available fiscal years for a given zone type:
 
@@ -50,14 +50,20 @@ Requirements
 Tests
 =====
 
+## Run all
 `unit2 discover`
+
+## Run one test
+`python test/test_commune_parsing.py Commune2009ParsingTestCase`
+
+## Download an html file to add a new test
+Here is an example to download a html page for a city at year 2013 :
+`curl -X POST -d "ICOM=234&DEP=045&TYPE=BPS&PARAM=0&EXERCICE=2013" http://alize2.finances.gouv.fr/communes/eneuro/detail.php > test/data/commune_2013_account.html`
+
 
 TODO
 ====
  * Add some docs, especially indicate the mapping between variable names and
    fields in html pages.
- * Get simple stats on scraped data to check its quality (partly made for
-   cities and epci).
- * Add some tests on different fiscal years.
 
 
