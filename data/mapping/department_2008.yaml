@@ -26,10 +26,6 @@ FONCTIONNEMENT:
   self_financing_capacity: Capacité d'autofinancement brute=CAF
 
 INVESTISSEMENT:
-  debt_repayment_capacity: CAF nette du remboursement en capital des emprunts
-  self_financing_capacity: Capacité d'autofinancement = CAF
-  surplus: Excédent brut de fonctionnement
-
   investment_ressources: Total des ressources d'investissement budgétaires = C
   fctva: FCTVA
   received_subsidies: Subventions d'investissements reçues
@@ -40,6 +36,7 @@ INVESTISSEMENT:
   paid_subsidies: Subventions d'équipement versées
   debt_repayments: Remboursement en capital des emprunts
   residual_financing_capacity: Besoin de financement résiduel = D-C
+  thirdparty_balance: Solde des opérations pour compte de tiers
   financing_capacity: Besoin de financement de la section d'investissement
   global_profit: Résultat d'ensemble
 

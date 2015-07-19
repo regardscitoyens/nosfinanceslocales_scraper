@@ -2,7 +2,14 @@
 
 from document_mapper import DocumentMapper
 
-from .finance import (CityFinanceParser, EPCIFinanceParser, DepartmentFinanceParser, RegionFinanceParser)
+from .finance import (
+    CityFinanceParser,
+    EPCIFinanceParser,
+    DepartmentFinanceParser,
+    DepartmentFinance2013Parser,
+    RegionFinanceParser
+)
+
 from .tax import (
     CityTaxParser,
     CityBefore2008TaxParser,
@@ -23,6 +30,7 @@ class BaseZoneParser(object):
     account = None
     finance_table_id = 3
     finance_parser_cls = None
+    tax_parser = None
 
     def __init__(self, insee_code, year, url):
         self.data = {'insee_code': insee_code,
@@ -59,17 +67,26 @@ class RegionZoneParser(BaseZoneParser):
 
 class DepartmentZoneParser(BaseZoneParser):
     zone_type = 'department'
-    account = DocumentMapper("data/mapping/department_2009.yaml")
-    finance_parser_cls = DepartmentFinanceParser
 
     def __init__(self, insee_code, year, url):
         super(DepartmentZoneParser, self).__init__(insee_code, year, url)
-
-        if int(self.data['year']) > 2010:
+        year = int(self.data['year'])
+        self.finance_parser_cls = DepartmentFinanceParser
+        if year >= 2013:
+            self.account = DocumentMapper("data/mapping/department_2013.yaml")
             self.tax_parser = DepTaxParser(self.account)
-        elif int(self.data['year']) > 2008:
+            self.finance_parser_cls = DepartmentFinance2013Parser
+        elif 2013 > year > 2010:
+            self.account = DocumentMapper("data/mapping/department_2011.yaml")
+            self.tax_parser = DepTaxParser(self.account)
+        elif year == 2010:
+            self.account = DocumentMapper("data/mapping/department_2010.yaml")
             self.tax_parser = DepTax20092010Parser(self.account)
-        else:
+        elif 2010 > year > 2008:
+            self.account = DocumentMapper("data/mapping/department_2009.yaml")
+            self.tax_parser = DepTax20092010Parser(self.account)
+        elif year == 2008:
+            self.account = DocumentMapper("data/mapping/department_2008.yaml")
             self.tax_parser = DepTax2008Parser(self.account)
 
 

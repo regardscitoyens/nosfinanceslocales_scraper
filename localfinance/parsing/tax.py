@@ -123,6 +123,7 @@ class DepTax2008Parser(DepTaxParser):
         TaxInfo('basis', 3, 8, 2, 0),
         TaxInfo('value', 9, 14, 3, 0),
         TaxInfo('rate', 9, 14, 3, 4),
+        TaxInfo('cuts_on_deliberation', 3, 8, 2, 3),
     ]
 
 

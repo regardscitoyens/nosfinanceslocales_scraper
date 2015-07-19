@@ -97,6 +97,11 @@ class DepartmentFinanceParser(FinanceParser):
         return int(pop.replace(' ', ''))
 
 
+class DepartmentFinance2013Parser(DepartmentFinanceParser):
+    finance_value_icol = 0
+    finance_name_icol = 3
+
+
 class RegionFinanceParser(DepartmentFinanceParser):
     def name(self, hxs):
         xpath = '//body/table[position()=3]/tr[position()=1]/td/span/text()'
