@@ -4,7 +4,7 @@ import re
 
 import pandas as pd
 from scrapy.spider import BaseSpider
-from scrapy.selector import HtmlXPathSelector
+from scrapy.selector import Selector
 
 from ..parsing.zone import (
     CityZoneParser,
@@ -49,6 +49,7 @@ class LocalFinanceSpider(BaseSpider):
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
         data['REGION'] = uniformize_code(data, 'REGION')
         # Special case for DOM as usual
+
         def set_dom_code(reg):
             if reg == '001':
                 return '101'
@@ -73,9 +74,10 @@ class LocalFinanceSpider(BaseSpider):
         data['siren'] = data[u'Établissement public à fiscalité propre'][1:]
         data = data.groupby('siren', as_index=False).first()
         data['dep'] = data[u'Département commune'].apply(get_dep_code_from_com_code)
-        baseurl = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s" % (
-        self.domain, str(year))
-        return [baseurl % row for __, row in data.iterrows()]
+
+        base_url = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s" % (self.domain, str(year))
+
+        return [base_url % row for __, row in data.iterrows()]
 
     def get_commune_urls(self, year):
         """
@@ -88,6 +90,7 @@ class LocalFinanceSpider(BaseSpider):
 
         insee_code_file = "data/locality/france2013.txt"
         data = pd.io.parsers.read_csv(insee_code_file, '\t')
+
         # XXX: insee_communes file contains also "cantons", filter out these lines
         mask = data['ACTUAL'].apply(lambda v: v in [1, 2, 3])
         data = data[mask].reindex()
@@ -105,9 +108,9 @@ class LocalFinanceSpider(BaseSpider):
 
         data['COM'] = data.apply(convert_city, axis=1)
 
-        baseurl = "%s/communes/eneuro/detail.php?icom=%%(COM)s&dep=%%(DEP)s&type=BPS&param=0&exercice=%s" % (
-        self.domain, str(year))
-        return [baseurl % row for __, row in data.iterrows()]
+        base_url = "%s/communes/eneuro/detail.php?icom=%%(COM)s&dep=%%(DEP)s&type=BPS&param=0&exercice=%s" % (self.domain, str(year))
+
+        return [base_url % row for __, row in data.iterrows()]
 
     def parse(self, response):
         if "/communes/eneuro/detail_gfp.php" in response.url:
@@ -121,12 +124,16 @@ class LocalFinanceSpider(BaseSpider):
 
     def parse_commune(self, response):
         """Parse the response and return an Account object"""
-        hxs = HtmlXPathSelector(response)
-        icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})',
-                                    response.url).groups()
+        hxs = Selector(response)
 
-        # XXX: better to use the real insee code for later analysis, not icom and dep
-        # in url.
+        h3_strings = hxs.xpath("//body/h3/text()").extract()
+
+        if h3_strings and h3_strings[0].startswith("Aucune commune"):
+            return []
+
+        icom, dep, year = re.search('icom=(\d{3})&dep=(\w{3})&type=\w{3}&param=0&exercice=(\d{4})', response.url).groups()
+
+        # XXX: better to use the real insee code for later analysis, not icom and dep in url.
         real_dep = dict([(val, key) for key, val in DOM_DEP_MAPPING.items()]).get(dep, dep[1:])
         real_com = icom if dep not in DOM_DEP_MAPPING.values() else icom[1:]
         real_insee_code = real_dep + real_com
@@ -140,21 +147,21 @@ class LocalFinanceSpider(BaseSpider):
         return LocalFinance(id=real_insee_code, data=parser.parse(hxs))
 
     def parse_epci(self, response):
-        hxs = HtmlXPathSelector(response)
+        hxs = Selector(response)
         siren, year = re.search('siren=(\d+)&dep=\w{3}&type=BPS&exercice=(\d{4})', response.url).groups()
         parser = EPCIZoneParser(siren, year, response.url)
 
         return LocalFinance(id=siren, data=parser.parse(hxs))
 
     def parse_dep(self, response):
-        hxs = HtmlXPathSelector(response)
+        hxs = Selector(response)
         dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
         parser = DepartmentZoneParser(str(int(dep)), year, response.url)
 
         return LocalFinance(id=dep, data=parser.parse(hxs))
 
     def parse_reg(self, response):
-        hxs = HtmlXPathSelector(response)
+        hxs = Selector(response)
         dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
         parser = RegionZoneParser(dep, year, response.url)
         return LocalFinance(id=dep, data=parser.parse(hxs))

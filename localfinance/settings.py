@@ -14,9 +14,11 @@ NEWSPIDER_MODULE = 'localfinance.spiders'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'localgouv (+http://www.yourdomain.com)'
 
-#DOWNLOAD_DELAY = 0.25
+DOWNLOAD_DELAY = 0.1
 
 AUTOTHROTTLE_ENABLED = True
+
+LOG_LEVEL = "INFO"
 
 # Logging does weird things...
 #import scrapy

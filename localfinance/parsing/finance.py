@@ -46,7 +46,6 @@ class FinanceParser(object):
                 section = ths[0].xpath('.//text()').extract()[0]
                 if self.account.is_section(section):
                     current_section = section
-                    print "Entering in section %s" % section
                     continue
 
                 if not self.account.find_node(current_section, section):
