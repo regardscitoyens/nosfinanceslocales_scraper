@@ -7,7 +7,8 @@ from .finance import (
     EPCIFinanceParser,
     DepartmentFinanceParser,
     DepartmentFinance2013Parser,
-    RegionFinanceParser
+    RegionFinanceParser,
+    RegionFinance2013Parser
 )
 
 from .tax import (
@@ -51,15 +52,22 @@ class BaseZoneParser(object):
 
 class RegionZoneParser(BaseZoneParser):
     zone_type = 'region'
-    account = None
-    finance_parser_cls = RegionFinanceParser
 
     def __init__(self, insee_code, year, url):
         super(RegionZoneParser, self).__init__(insee_code, year, url)
 
-        if int(self.data['year']) == 2008:
+        self.account = DocumentMapper("data/mapping/region_2008.yaml")
+        self.finance_parser_cls = RegionFinanceParser
+
+        year = int(self.data['year'])
+
+        if year == 2013:
+            self.finance_parser_cls = RegionFinance2013Parser
+            self.account = DocumentMapper("data/mapping/region_2013.yaml")
+
+        if year == 2008:
             self.tax_parser = RegTaxParser2008(self.account)
-        elif int(self.data['year']) < 2011:
+        elif year < 2011:
             self.tax_parser = RegTaxParser20092010(self.account)
         else:
             self.tax_parser = RegTaxParserAfter2011(self.account)

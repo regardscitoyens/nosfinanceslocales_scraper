@@ -1,6 +1,6 @@
 OPERATIONS DE FONCTIONNEMENT:
   operating_revenues: TOTAL DES PRODUITS DE FONCTIONNEMENT = A
-  localtax: Impôts Locaux
+  local_tax: Impôts Locaux
   other_tax: Autres impôts et taxes
   allocation: Dotation globale de fonctionnement
   operating_costs: TOTAL DES CHARGES DE FONCTIONNEMENT = B
@@ -38,17 +38,11 @@ ENDETTEMENT:
   working_capital: FONDS DE ROULEMENT
 
 tax:
-  categories:
-    basis: Bases nettes imposées
-    cuts_on_deliberation: Réductions de bases accordées sur délibérations
-    value: Produits des impôts locaux
-    rate: Taux voté
-  types:
-    home_tax: Taxe d'habitation (y compris THLV)
-    property_tax: Taxe foncière sur les propriétés bâties
-    land_property_tax: Taxe foncière sur les propriétés non bâties
-    additionnal_land_property_tax: Taxe additionnelle à la taxe foncière sur les propriétés non bâties
-    business_property_contribution: Cotisation foncière des entreprises
-    business_profit_contribution: Cotisation sur la valeur ajoutée des entreprises
-    business_network_tax: Impositions forfaitaires sur les entreprises de réseau
-    retail_land_tax: Taxe sur les surfaces commerciales
+  home_tax: Taxe d'habitation (y compris THLV)
+  property_tax: Taxe foncière sur les propriétés bâties
+  land_property_tax: Taxe foncière sur les propriétés non bâties
+  additionnal_land_property_tax: Taxe additionnelle à la taxe foncière sur les propriétés non bâties
+  business_property_contribution: Cotisation foncière des entreprises
+  business_profit_contribution: Cotisation sur la valeur ajoutée des entreprises
+  business_network_tax: Impositions forfaitaires sur les entreprises de réseau
+  retail_land_tax: Taxe sur les surfaces commerciales

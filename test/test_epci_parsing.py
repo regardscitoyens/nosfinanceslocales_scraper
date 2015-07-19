@@ -27,7 +27,7 @@ class EPCIFinanceParsingTestCase(unittest2.TestCase):
         self.assertEqual(data['population'], 2701)
         # test data parsed from first table
         self.assertEqual(data['operating_revenues'], 1879000.)
-        self.assertEqual(data['localtax'], 395000.)
+        self.assertEqual(data['local_tax'], 395000.)
         self.assertEqual(data['operating_costs'], 1742000.)
 
         # test data parsed from second table

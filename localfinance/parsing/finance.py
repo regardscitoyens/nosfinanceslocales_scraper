@@ -109,6 +109,11 @@ class RegionFinanceParser(DepartmentFinanceParser):
         return name.split('SITUATION FINANCIERE de la ')[1].strip()
 
 
+class RegionFinance2013Parser(RegionFinanceParser):
+    finance_value_icol = 0
+    finance_name_icol = 3
+
+
 class CityFinanceParser(FinanceParser):
     tr_name_position = 3
 

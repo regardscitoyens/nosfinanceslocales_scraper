@@ -4,10 +4,9 @@ FONCTIONNEMENT:
   local_tax: Impôts directs
   refund_tax: Fiscalité reversée
   other_tax: Autres impôts et taxes
-  advertisement_tax: taxe départementale de publicité foncière et droits d'enregistrement
   tipp: TIPP
-  allocation_and_stake: Dotations et participations
   allocation: dotation globale de fonctionnement
+  training_and_learning_allocation: Dotation d'apprentissage et de formation professionnelle
   realignment: attributions de péréquation et de compensation
   operating_costs: Total des charges de fonctionnement = B
   operating_real_costs: charges de fonctionnement réelles
@@ -17,19 +16,10 @@ FONCTIONNEMENT:
   mandatory_contributions_and_stakes: contributions obligatoires et participations
   subsidies: subventions
   individual_aids: aides à la personne
-  pch: PCH
-  apa: APA
-  rsa: RSA
-  accomodation_costs: frais de séjour et d'hébergement
   financial_costs: Charges financières
   net_profit: Résultat comptable = A - B
-  self_financing_capacity: Capacité d'autofinancement brute=CAF
 
 INVESTISSEMENT:
-  debt_repayment_capacity: CAF nette du remboursement en capital des emprunts
-  self_financing_capacity: Capacité d'autofinancement = CAF
-  surplus: Excédent brut de fonctionnement
-
   investment_ressources: Total des ressources d'investissement budgétaires = C
   fctva: FCTVA
   received_subsidies: Subventions d'investissements reçues
@@ -40,6 +30,7 @@ INVESTISSEMENT:
   paid_subsidies: Subventions d'équipement versées
   debt_repayments: Remboursement en capital des emprunts
   residual_financing_capacity: Besoin de financement résiduel = D-C
+  thirdparty_balance: Solde des opérations pour compte de tiers
   financing_capacity: Besoin de financement de la section d'investissement
   global_profit: Résultat d'ensemble
 
@@ -48,7 +39,8 @@ DETTE:
   debt_annual_costs: Annuité des dettes bancaires et assimilées
 
 tax:
-  home_tax: Taxe d'habitation
   property_tax: Taxe foncière sur les propriétés bâties
   land_property_tax: Taxe foncière sur les propriétés non bâties
-  compensation_2010: Compensation-Relais 2010
+  business_tax: Taxe professionnelle
+  business_profit_contribution: Cotisation Valeur Ajoutée des Entreprises
+  business_network_tax: Imposition forfaitaire sur les entreprises de réseau

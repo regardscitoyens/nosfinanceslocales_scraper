@@ -1,7 +1,7 @@
 FONCTIONNEMENT:
   operating_revenues: Total des produits de fonctionnement = A
   operating_real_revenues: produits de fonctionnement réels
-  localtax: Impôts directs
+  local_tax: Impôts directs
   refund_tax: Fiscalité reversée
   other_tax: Autres impôts et taxes
   advertisement_tax: taxe départementale de publicité foncière et droits d'enregistrement
@@ -48,7 +48,6 @@ DETTE:
   debt_annual_costs: Annuité des dettes bancaires et assimilées
 
 tax:
-  types:
-    property_tax: Taxe foncière sur les propriétés bâties
-    business_profit_contribution: Cotisation Valeur Ajoutée des Entreprises
-    business_network_tax: Imposition forfaitaire sur les entreprises de réseau
+  property_tax: Taxe foncière sur les propriétés bâties
+  business_profit_contribution: Cotisation Valeur Ajoutée des Entreprises
+  business_network_tax: Imposition forfaitaire sur les entreprises de réseau

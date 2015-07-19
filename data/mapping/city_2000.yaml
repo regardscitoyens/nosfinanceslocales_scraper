@@ -1,6 +1,6 @@
 OPERATIONS DE FONCTIONNEMENT:
   operating_revenues: TOTAL DES PRODUITS DE FONCTIONNEMENT = A
-  localtax: Impôts Locaux
+  local_tax: Impôts Locaux
   other_tax: Autres impôts et taxes
   allocation: Dotation globale de fonctionnement
   operating_costs: TOTAL DES CHARGES DE FONCTIONNEMENT = B
@@ -39,11 +39,7 @@ ENDETTEMENT:
   working_capital: FONDS DE ROULEMENT
 
 tax:
-  categories:
-    value: Produits des impôts locaux
-    rate: Taux voté
-  types:
-    home_tax: Produits taxe d'habitation
-    property_tax: Produits foncier bâti
-    land_property_tax: Produits foncier non bâti
-    business_tax: Produits taxe professionnelle
+  home_tax: Produits taxe d'habitation
+  property_tax: Produits foncier bâti
+  land_property_tax: Produits foncier non bâti
+  business_tax: Produits taxe professionnelle

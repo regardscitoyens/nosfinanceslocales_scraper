@@ -21,7 +21,7 @@ class DocumentMapper(object):
 
     def find_tax(self, name):
         taxes = []
-        for key, value in self.mapping['tax']['types'].items():
+        for key, value in self.mapping['tax'].items():
             s = SequenceMatcher(None, name.lower(), value.lower())
             if s.ratio() > 0.5:
                 taxes.append((s.ratio(), key))
