@@ -108,7 +108,5 @@ class RegionFinance2013ParsingTest(unittest2.TestCase):
             self.assertAlmostEqual(data[key], val)
 
 
-
-
 if __name__ == '__main__':
     unittest2.main()

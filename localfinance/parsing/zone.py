@@ -34,10 +34,12 @@ class BaseZoneParser(object):
     tax_parser = None
 
     def __init__(self, insee_code, year, url):
-        self.data = {'insee_code': insee_code,
-                     'year': year,
-                     'zone_type': self.zone_type,
-                     'url': url}
+        self.data = {
+            'insee_code': insee_code,
+            'year': year,
+            'zone_type': self.zone_type,
+            'url': url
+        }
 
     @property
     def finance_parser(self):
@@ -100,14 +102,16 @@ class DepartmentZoneParser(BaseZoneParser):
 
 class EPCIZoneParser(BaseZoneParser):
     zone_type = 'epci'
-    account = None
     finance_parser_cls = EPCIFinanceParser
 
     def __init__(self, insee_code, year, url, siren):
         super(EPCIZoneParser, self).__init__(insee_code, year, url)
         self.data['siren'] = siren
 
+        self.account = DocumentMapper("data/mapping/epci_2010.yaml")
+
         if int(self.data['year']) < 2009:
+            self.account = DocumentMapper("data/mapping/epci_2008.yaml")
             self.tax_parser = EPCI2008TaxParser(self.account)
         elif int(self.data['year']) < 2011:
             self.tax_parser = EPCI2010TaxParser(self.account)

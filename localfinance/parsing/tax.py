@@ -27,7 +27,7 @@ class TaxInfoParser(object):
             if len(tds) <= max(taxinfo.value_col, taxinfo.name_col):
                 continue
 
-            name = clean_name(tds[taxinfo.name_col].xpath('./text()').extract()[0])
+            name = clean_name(' '.join(tds[taxinfo.name_col].xpath('.//text()').extract()).strip())
 
             target = self.account.find_tax(name)
 
@@ -133,7 +133,7 @@ class EPCITaxParser(TaxParser):
         TaxInfo('cuts_on_deliberation', 4, 11, 2, 3),
         TaxInfo('value', 13, 20, 2, 0),
         TaxInfo('rate', 13, 20, 2, 3),
-        TaxInfo('value', 22, 25, 2, 0),
+        TaxInfo('value', 21, 25, 2, 0),
     ]
 
 
