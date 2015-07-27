@@ -3,7 +3,7 @@
 import re
 
 import pandas as pd
-from scrapy.spider import BaseSpider
+from scrapy.spiders import Spider
 from scrapy.selector import Selector
 
 from ..parsing.zone import (
@@ -15,7 +15,7 @@ from ..parsing.zone import (
 from ..item import LocalFinance
 
 
-class LocalFinanceSpider(BaseSpider):
+class LocalFinanceSpider(Spider):
     """Basic spider which crawls all pages of finance of french towns, departments
     regions and EPCI.
     """
@@ -149,19 +149,31 @@ class LocalFinanceSpider(BaseSpider):
     def parse_epci(self, response):
         hxs = Selector(response)
         siren, year = re.search('siren=(\d+)&dep=\w{3}&type=BPS&exercice=(\d{4})', response.url).groups()
-        parser = EPCIZoneParser(siren, year, response.url)
+        parser = EPCIZoneParser("", year, response.url, siren)
 
         return LocalFinance(id=siren, data=parser.parse(hxs))
 
     def parse_dep(self, response):
         hxs = Selector(response)
+
+        h3_strings = hxs.xpath("//body/h3/text()").extract()
+
+        if h3_strings and h3_strings[0].startswith(u'Aucune donn\xe9es'):
+            return []
+
         dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
-        parser = DepartmentZoneParser(str(int(dep)), year, response.url)
+        parser = DepartmentZoneParser(dep, year, response.url)
 
         return LocalFinance(id=dep, data=parser.parse(hxs))
 
     def parse_reg(self, response):
         hxs = Selector(response)
+
+        h3_strings = hxs.xpath("//body/h3/text()").extract()
+
+        if h3_strings and h3_strings[0].startswith(u'Aucune donn\xe9es'):
+            return []
+
         dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
         parser = RegionZoneParser(dep, year, response.url)
         return LocalFinance(id=dep, data=parser.parse(hxs))
