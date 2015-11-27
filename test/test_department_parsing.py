@@ -231,5 +231,32 @@ class DepartmentFinance2013ParsingTestCase(unittest2.TestCase):
             self.assertAlmostEqual(data[key], val)
 
 
+class DepartmentFinance2014ParsingTestCase(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('test/data/department_2014_account.html',
+                                     encoding='windows-1252')
+        self.data = {
+            'operating_revenues': 543861000,
+            'local_tax': 190228000,
+            'other_tax': 150642000,
+            'advertisement_tax': 42176000,
+            'allocation': 108938000,
+            'working_capital': 26133000,
+            'property_tax_basis': 464872000,
+            'property_tax_value': 147459000,
+            'property_tax_rate': 0.3172,
+            'property_tax_cuts_on_deliberation': 204000,
+            'business_profit_contribution_basis': 0,
+            'business_profit_contribution_value': 40139000,
+            'business_profit_contribution_cuts_on_deliberation': 34000,
+            'business_network_tax_value': 1074000,
+        }
+
+    def test_parsing(self):
+        parser = DepartmentZoneParser('', 2014, '')
+        data = parser.parse(Selector(self.response))
+        for key, val in self.data.items():
+            self.assertAlmostEqual(data[key], val)
+
 if __name__ == '__main__':
     unittest2.main()

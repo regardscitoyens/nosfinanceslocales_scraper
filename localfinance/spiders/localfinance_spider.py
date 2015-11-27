@@ -23,7 +23,7 @@ class LocalFinanceSpider(Spider):
     domain = "http://alize2.finances.gouv.fr"
     allowed_domains = [domain]
 
-    def __init__(self, year=2012, zone_type='city'):
+    def __init__(self, year=2014, zone_type='city'):
         """Load insee code of every commune in france and generate all the urls to
         crawl."""
         self.start_urls = []

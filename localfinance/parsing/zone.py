@@ -28,10 +28,6 @@ from .tax import (
 
 class BaseZoneParser(object):
     zone_type = ''
-    account = None
-    finance_table_id = 3
-    finance_parser_cls = None
-    tax_parser = None
 
     def __init__(self, insee_code, year, url):
         self.data = {
@@ -41,9 +37,10 @@ class BaseZoneParser(object):
             'url': url
         }
 
-    @property
-    def finance_parser(self):
-        return self.finance_parser_cls(self.account)
+        self.tax_parser = None
+        self.finance_parser = None
+        self.account = None
+        self.finance_table_id = 3
 
     def parse(self, hxs):
         data = self.data.copy()
@@ -59,20 +56,22 @@ class RegionZoneParser(BaseZoneParser):
         super(RegionZoneParser, self).__init__(insee_code, year, url)
 
         self.account = DocumentMapper("data/mapping/region_2008.yaml")
-        self.finance_parser_cls = RegionFinanceParser
 
         year = int(self.data['year'])
 
-        if year == 2013:
-            self.finance_parser_cls = RegionFinance2013Parser
-            self.account = DocumentMapper("data/mapping/region_2013.yaml")
-
         if year == 2008:
             self.tax_parser = RegTaxParser2008(self.account)
-        elif year < 2011:
+            self.finance_parser = RegionFinanceParser(self.account)
+        elif 2008 < year < 2011:
             self.tax_parser = RegTaxParser20092010(self.account)
-        else:
+            self.finance_parser = RegionFinanceParser(self.account)
+        elif 2010 < year < 2013:
             self.tax_parser = RegTaxParserAfter2011(self.account)
+            self.finance_parser = RegionFinanceParser(self.account)
+        else:
+            self.account = DocumentMapper("data/mapping/region_2013.yaml")
+            self.tax_parser = RegTaxParserAfter2011(self.account)
+            self.finance_parser = RegionFinance2013Parser(self.account)
 
 
 class DepartmentZoneParser(BaseZoneParser):
@@ -80,40 +79,47 @@ class DepartmentZoneParser(BaseZoneParser):
 
     def __init__(self, insee_code, year, url):
         super(DepartmentZoneParser, self).__init__(insee_code, year, url)
+
         year = int(self.data['year'])
-        self.finance_parser_cls = DepartmentFinanceParser
+
         if year >= 2013:
             self.account = DocumentMapper("data/mapping/department_2013.yaml")
             self.tax_parser = DepTaxParser(self.account)
-            self.finance_parser_cls = DepartmentFinance2013Parser
+            self.finance_parser = DepartmentFinance2013Parser(self.account)
         elif 2013 > year > 2010:
             self.account = DocumentMapper("data/mapping/department_2011.yaml")
             self.tax_parser = DepTaxParser(self.account)
+            self.finance_parser = DepartmentFinanceParser(self.account)
         elif year == 2010:
             self.account = DocumentMapper("data/mapping/department_2010.yaml")
             self.tax_parser = DepTax20092010Parser(self.account)
+            self.finance_parser = DepartmentFinanceParser(self.account)
         elif 2010 > year > 2008:
             self.account = DocumentMapper("data/mapping/department_2009.yaml")
             self.tax_parser = DepTax20092010Parser(self.account)
+            self.finance_parser = DepartmentFinanceParser(self.account)
         elif year == 2008:
             self.account = DocumentMapper("data/mapping/department_2008.yaml")
             self.tax_parser = DepTax2008Parser(self.account)
+            self.finance_parser = DepartmentFinanceParser(self.account)
 
 
 class EPCIZoneParser(BaseZoneParser):
     zone_type = 'epci'
-    finance_parser_cls = EPCIFinanceParser
 
     def __init__(self, insee_code, year, url, siren):
         super(EPCIZoneParser, self).__init__(insee_code, year, url)
         self.data['siren'] = siren
 
         self.account = DocumentMapper("data/mapping/epci_2010.yaml")
+        self.finance_parser = EPCIFinanceParser(self.account)
 
-        if int(self.data['year']) < 2009:
+        year = int(self.data['year'])
+
+        if year < 2009:
             self.account = DocumentMapper("data/mapping/epci_2008.yaml")
             self.tax_parser = EPCI2008TaxParser(self.account)
-        elif int(self.data['year']) < 2011:
+        elif year < 2011:
             self.tax_parser = EPCI2010TaxParser(self.account)
         else:
             self.tax_parser = EPCITaxParser(self.account)
@@ -122,20 +128,21 @@ class EPCIZoneParser(BaseZoneParser):
 class CityZoneParser(BaseZoneParser):
     """Parser of city html page"""
     zone_type = 'city'
-    finance_parser_cls = CityFinanceParser
 
     def __init__(self, insee_code, year, url):
         super(CityZoneParser, self).__init__(insee_code, year, url)
 
-        if int(self.data['year']) > 2011:
+        year = int(self.data['year'])
+
+        if year > 2011:
             self.account = DocumentMapper("data/mapping/city_2012.yaml")
             self.tax_parser = CityTaxParser(self.account)
-        elif 2008 < int(self.data['year']) < 2012:
+        elif 2008 < year < 2012:
             self.account = DocumentMapper("data/mapping/city_2009.yaml")
             self.tax_parser = CityTaxParser(self.account)
-        elif int(self.data['year']) < 2009:
+        elif year < 2009:
             self.account = DocumentMapper("data/mapping/city_2000.yaml")
             self.tax_parser = CityBefore2008TaxParser(self.account)
 
-
+        self.finance_parser = CityFinanceParser(self.account)
 

@@ -29,3 +29,14 @@ class DocumentMapper(object):
 
     def is_section(self, name):
         return name.strip().lower() in self.sections
+
+    def get_all_fields(self):
+        fields = []
+        for section, values in self.mapping.items():
+            for key in values.keys():
+                if section == 'tax':
+                    for tax_field in ['_rate', '_value', '_basis', '_cuts_on_deliberation']:
+                        fields.append(key + tax_field)
+                else:
+                    fields.append(key)
+        return fields

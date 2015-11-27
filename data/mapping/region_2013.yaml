@@ -2,7 +2,7 @@ OPERATIONS DE FONCTIONNEMENT:
   operating_revenues: Total des produits de fonctionnement = A
   local_tax: Impôts Locaux
   other_tax: Autres impôts et taxes
-  tipp: TIPCE
+  tipp: dont TIPCE
   allocation: dotation globale de fonctionnement
   operating_costs: Total des charges de fonctionnement = B
   staff_costs: Charges de personnel

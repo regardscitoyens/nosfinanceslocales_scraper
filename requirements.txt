@@ -7,3 +7,4 @@ unittest2
 queuelib
 pyOpenSSL
 pyaml
+unicodecsv

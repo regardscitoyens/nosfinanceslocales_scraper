@@ -108,5 +108,27 @@ class RegionFinance2013ParsingTest(unittest2.TestCase):
             self.assertAlmostEqual(data[key], val)
 
 
+class RegionFinance2014ParsingTest(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('test/data/region_2014_account.html', encoding='windows-1252')
+
+        self.data = {
+            'name': 'REGION BASSE-NORMANDIE',
+            'population': 1475684,
+            'local_tax': 81584000,
+            'operating_revenues': 597792000,
+            'tipp': 113935000,
+            'business_profit_contribution_value': 68004000,
+            'business_profit_contribution_cuts_on_deliberation': 91000,
+            'business_network_tax_value': 13609000,
+        }
+
+    def test_parsing(self):
+        parser = RegionZoneParser('', 2014, '')
+        data = parser.parse(Selector(self.response))
+        for key, val in self.data.items():
+            self.assertAlmostEqual(data[key], val)
+
+
 if __name__ == '__main__':
     unittest2.main()

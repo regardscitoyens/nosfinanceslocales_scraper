@@ -57,8 +57,11 @@ Tests
 `python test/test_commune_parsing.py Commune2009ParsingTestCase`
 
 ## Download an html file to add a new test
-Here is an example to download a html page for a city at year 2013 :
-`curl -X POST -d "ICOM=234&DEP=045&TYPE=BPS&PARAM=0&EXERCICE=2013" http://alize2.finances.gouv.fr/communes/eneuro/detail.php > test/data/commune_2013_account.html`
+Here are some examples to download html pages for region, department, epci and city at year 2014 :
+`curl -X POST -d "REG=025&EXERCICE=2014" http://alize2.finances.gouv.fr/regions/detail.php > test/data/region_2014_account.html`
+`curl -X POST -d "DEP=002&EXERCICE=2014" http://alize2.finances.gouv.fr/departements/detail.php > test/data/department_2014_account.html`
+`curl -X POST -d "NOMDEP=ALLIER&ICOM=008&DEP=003&TYPE=BPS&PARAM=0&EXERCICE=2014&SIREN=240300418" http://alize2.finances.gouv.fr/communes/eneuro/detail_gfp.php > test/data/epci_2014_account.html`
+`curl -X POST -d "ICOM=234&DEP=045&TYPE=BPS&PARAM=0&EXERCICE=2014" http://alize2.finances.gouv.fr/communes/eneuro/detail.php > test/data/commune_2014_account.html`
 
 
 TODO

@@ -79,5 +79,30 @@ class EPCIFinance2013ParsingTest(unittest2.TestCase):
         for key, val in self.data.items():
             self.assertAlmostEqual(data[key], val)
 
+
+class EPCIFinance2013ParsingTest(unittest2.TestCase):
+    def setUp(self):
+        self.response = get_response('test/data/epci_2014_account.html', encoding='windows-1252')
+        self.data = {
+            'name': 'GFP : CC MONTAGNE BOURBONNAISE',
+            'population': 6897,
+            'operating_revenues': 753000,
+            'home_tax_basis': 6975000,
+            'home_tax_rate': 0.0112,
+            'home_tax_value': 78000,
+            'additionnal_land_property_tax_value': 0,
+            'business_property_contribution_additionnal_value': 11000,
+            'business_property_contribution_uniq_value': 0,
+            'business_property_contribution_eolien_value': 0,
+            'business_profit_contribution_value': 5000,
+        }
+
+    def test_parsing(self):
+        parser = EPCIZoneParser('', 2014, '', '')
+        data = parser.parse(Selector(self.response))
+        for key, val in self.data.items():
+            self.assertAlmostEqual(data[key], val)
+
+
 if __name__ == '__main__':
     unittest2.main()
