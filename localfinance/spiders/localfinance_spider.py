@@ -142,16 +142,19 @@ class LocalFinanceSpider(Spider):
         if real_insee_code == '75101':
             real_insee_code = '75056'
 
-        parser = CityZoneParser(real_insee_code, year, response.url)
-
-        return LocalFinance(id=real_insee_code, data=parser.parse(hxs))
+        data = CityZoneParser(real_insee_code, year, response.url).parse(hxs)
+        return LocalFinance(id=real_insee_code, data=data)
 
     def parse_epci(self, response):
         hxs = Selector(response)
         siren, year = re.search('siren=(\d+)&dep=\w{3}&type=BPS&exercice=(\d{4})', response.url).groups()
-        parser = EPCIZoneParser("", year, response.url, siren)
 
-        return LocalFinance(id=siren, data=parser.parse(hxs))
+        if 'Aucun GFP correspondant' in response.body:
+            self.logger.warning("No epci for siren=%s and year=%s (%s)" % (siren, year, response.url))
+            return
+
+        data = EPCIZoneParser("", year, response.url, siren).parse(hxs)
+        return LocalFinance(id=siren, data=data)
 
     def parse_dep(self, response):
         hxs = Selector(response)
@@ -162,9 +165,9 @@ class LocalFinanceSpider(Spider):
             return []
 
         dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
-        parser = DepartmentZoneParser(dep, year, response.url)
 
-        return LocalFinance(id=dep, data=parser.parse(hxs))
+        data = DepartmentZoneParser(dep, year, response.url).parse(hxs)
+        return LocalFinance(id=dep, data=data)
 
     def parse_reg(self, response):
         hxs = Selector(response)
@@ -175,8 +178,9 @@ class LocalFinanceSpider(Spider):
             return []
 
         dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
-        parser = RegionZoneParser(dep, year, response.url)
-        return LocalFinance(id=dep, data=parser.parse(hxs))
+
+        data = RegionZoneParser(dep, year, response.url).parse(hxs)
+        return LocalFinance(id=dep, data=data)
 
 
 def uniformize_code(df, column):

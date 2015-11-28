@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import logging
+logger = logging.getLogger(__name__)
+
 from ..utils import clean_name
 from ..utils import sanitize_value
 
@@ -36,7 +39,7 @@ class TaxInfoParser(object):
                 try:
                     val = sanitize_value(str_val)
                 except ValueError:
-                    print u"There is no valid value for the node %s - %s" % (target, str_val)
+                    logger.warning(u"There is no valid value for the node %s '%s'" % (target, str_val))
                     continue
                 if taxinfo.name == 'rate':
                     val /= 100.

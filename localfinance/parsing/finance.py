@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import logging
+logger = logging.getLogger(__name__)
+
 import re
 
 from ..utils import clean_name
@@ -75,7 +78,7 @@ class FinanceParser(object):
                     if value is not None:
                         data[target] = value
                 except IndexError:
-                    print "no value for node %s " % name
+                    logging.warning("no value for node %s " % name)
 
         return data
 
