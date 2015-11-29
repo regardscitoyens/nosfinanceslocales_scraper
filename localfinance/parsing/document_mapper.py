@@ -31,12 +31,16 @@ class DocumentMapper(object):
         return name.strip().lower() in self.sections
 
     def get_all_fields(self):
-        fields = []
+        fields = {}
+        tax_field_keys = ['rate', 'value', 'basis', 'cuts_on_deliberation']
+        tax_field_names = [u'taux', u'produits', u'base nette imposée', u'réductions de bases accordées sur délibérations']
         for section, values in self.mapping.items():
-            for key in values.keys():
+            for item in values.items():
                 if section == 'tax':
-                    for tax_field in ['_rate', '_value', '_basis', '_cuts_on_deliberation']:
-                        fields.append(key + tax_field)
+                    for tax_field_key, tax_field_name in zip(tax_field_keys, tax_field_names):
+                        key = item[0] + '_' + tax_field_key
+                        name = item[1] + ' - ' + tax_field_name
+                        fields.update({key: name.lower()})
                 else:
-                    fields.append(key)
+                    fields.update({item[0]: item[1].lower()})
         return fields

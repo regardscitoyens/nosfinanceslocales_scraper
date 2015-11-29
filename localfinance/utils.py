@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import os
 import re
+from collections import defaultdict
+from localfinance.parsing.document_mapper import DocumentMapper
 
 
 def sanitize_value(val):
@@ -26,3 +29,14 @@ def sanitize_value(val):
 def clean_name(name):
     return re.sub("(dont|\:|\+)", "", name).strip()
 
+
+def get_all_variables_by_locality():
+    variables = defaultdict(dict)
+
+    mapping_dir = 'data/mapping'
+
+    for mapping_file in os.listdir(mapping_dir):
+        locality = re.match('(\w+)_\d{4}\.yaml', mapping_file).groups()[0]
+        variables[locality].update(DocumentMapper(os.path.join(mapping_dir, mapping_file)).get_all_fields())
+
+    return variables
