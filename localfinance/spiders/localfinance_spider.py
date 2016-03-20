@@ -72,8 +72,8 @@ class LocalFinanceSpider(Spider):
         xls = pd.ExcelFile('data/locality/epci-au-01-01-2013.xls')
         data = xls.parse('Composition communale des EPCI')
         data['siren'] = data[u'Établissement public à fiscalité propre'][1:]
-        data = data.groupby('siren', as_index=False).first()
         data['dep'] = data[u'Département commune'].apply(get_dep_code_from_com_code)
+        data = data.groupby(['siren', 'dep'], as_index=False).first()
 
         base_url = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s" % (self.domain, str(year))
 
