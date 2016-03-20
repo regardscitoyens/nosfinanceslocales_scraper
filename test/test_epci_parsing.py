@@ -80,7 +80,7 @@ class EPCIFinance2013ParsingTest(unittest2.TestCase):
             self.assertAlmostEqual(data[key], val)
 
 
-class EPCIFinance2013ParsingTest(unittest2.TestCase):
+class EPCIFinance2014ParsingTest(unittest2.TestCase):
     def setUp(self):
         self.response = get_response('test/data/epci_2014_account.html', encoding='windows-1252')
         self.data = {
@@ -95,6 +95,8 @@ class EPCIFinance2013ParsingTest(unittest2.TestCase):
             'business_property_contribution_uniq_value': 0,
             'business_property_contribution_eolien_value': 0,
             'business_profit_contribution_value': 5000,
+            'other_tax': 942000,
+            'fiscal_repayment': -860000,
         }
 
     def test_parsing(self):

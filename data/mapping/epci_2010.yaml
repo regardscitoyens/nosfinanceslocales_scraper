@@ -1,6 +1,7 @@
 OPERATIONS DE FONCTIONNEMENT:
   operating_revenues: TOTAL DES PRODUITS DE FONCTIONNEMENT = A
   local_tax: Impôts Locaux
+  fiscal_repayment: Reversement de fiscalité
   other_tax: Autres impôts et taxes
   allocation: Dotation globale de fonctionnement
   operating_costs: TOTAL DES CHARGES DE FONCTIONNEMENT = B
