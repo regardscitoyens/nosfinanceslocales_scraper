@@ -13,6 +13,7 @@ from ..parsing.zone import (
     RegionZoneParser
 )
 from ..item import LocalFinance
+from ..utils import DOM_DEP_MAPPING, uniformize_code, convert_dom_code, get_dep_code_from_com_code, convert_city
 
 
 class LocalFinanceSpider(Spider):
@@ -67,14 +68,7 @@ class LocalFinanceSpider(Spider):
         return [baseurl % row for __, row in data.iterrows()]
 
     def get_epci_urls(self, year):
-        """Build url to crawl from insee file provided here
-        http://www.insee.fr/fr/methodes/default.asp?page=zonages/intercommunalite.htm"""
-        xls = pd.ExcelFile('data/locality/epci-au-01-01-2013.xls')
-        data = xls.parse('Composition communale des EPCI')
-        data['siren'] = data[u'Établissement public à fiscalité propre'][1:]
-        data['dep'] = data[u'Département commune'].apply(get_dep_code_from_com_code)
-        data = data.groupby(['siren', 'dep'], as_index=False).first()
-
+        data = pd.read_csv('data/locality/epci.csv')
         base_url = "%s/communes/eneuro/detail_gfp.php?siren=%%(siren)s&dep=%%(dep)s&type=BPS&exercice=%s" % (self.domain, str(year))
 
         return [base_url % row for __, row in data.iterrows()]
@@ -181,50 +175,3 @@ class LocalFinanceSpider(Spider):
 
         data = RegionZoneParser(dep, year, response.url).parse(hxs)
         return LocalFinance(id=dep, data=data)
-
-
-def uniformize_code(df, column):
-    # Uniformize dep code and commune code to be on a string of length 3.
-    def _uniformize_code(code):
-        return ("00%s" % code)[-3:]
-
-    return df[column].apply(_uniformize_code)
-
-
-# Weird thing: department is not the same between insee data and gouverment's
-# site for DOM.
-# GUADELOUPE: 971 -> 101
-# MARTINIQUE: 972 -> 103
-# GUYANE:     973 -> 102
-# REUNION:    974 -> 104
-DOM_DEP_MAPPING = {
-    '971': '101',
-    '972': '103',
-    '973': '102',
-    '974': '104',
-}
-
-
-def convert_dom_code(df, column='DEP'):
-    return df[column].apply(lambda code: DOM_DEP_MAPPING.get(code, code))
-
-
-def get_dep_code_from_com_code(com):
-    return DOM_DEP_MAPPING.get(str(com[:3]), ('0%s' % com)[:3])
-
-# Another strange thing, DOM cities have an insee_code on 2 digits in the
-# insee file. We need to add a third digit before these two to crawl the
-# right page. This third digit is find according to this mapping:
-# GUADELOUPE: 1
-# MARTINIQUE: 2
-# GUYANE: 3
-# REUNION: 4
-DOM_CITY_DIGIT_MAPPING = {'101': 1, '103': 2, '102': 3, '104': 4}
-
-
-def convert_city(row):
-    if row['DEP'] not in ['101', '102', '103', '104']:
-        return row['COM']
-    first_digit = str(DOM_CITY_DIGIT_MAPPING.get(row['DEP']))
-    return first_digit + row['COM'][1:]
-

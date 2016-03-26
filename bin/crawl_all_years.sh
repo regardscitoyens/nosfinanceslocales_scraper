@@ -1,5 +1,7 @@
 #!/bin/bash
-# Crawl all pages from year 2000 to 2012
+
+echo "Crawl..."
+echo "------------"
 
 zone_type=$1
 startyear=2000
@@ -19,4 +21,7 @@ for year in $(seq $startyear 2014);
 do
     scrapy crawl localfinance -o scraped_data/${zone_type}_$year.json -t jsonlines -a year=$year -a zone_type=$zone_type
 done
+
+echo "...done"
+echo
 

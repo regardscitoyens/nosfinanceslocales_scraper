@@ -20,7 +20,7 @@ def make_csv():
     data_files = os.listdir('scraped_data')
     fieldnames_by_locality = get_all_variables_by_locality()
 
-    for zone_type in ['city', 'department', 'epci', 'region']:
+    for zone_type in ['city', 'epci', 'department', 'region']:
         print "Make %s csv..." % zone_type
 
         locality_data_files = [data_file for data_file in data_files if zone_type in data_file]
