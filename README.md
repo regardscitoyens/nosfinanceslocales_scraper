@@ -5,7 +5,7 @@ This project aims at scraping financial data of cities (="communes"), EPCI
 (group of cities Cf. [wikipedia](http://fr.wikipedia.org/wiki/%C3%89tablissement_public_de_coop%C3%A9ration_intercommunale)), department and regions from the website
 http://www.collectivites-locales.gouv.fr/.
 
-We used scrapy lib to crawl the page and xpaths stuff to scrap data.
+This project uses [scrapy](https://github.com/scrapy/scrapy) to crawl and scrape data.
 
 All the data scraped for the regions is committed as an example here:
  * with variable names as header: [scraped_data/region_all.csv](scraped_data/region_all.csv)
@@ -15,12 +15,12 @@ All the data scraped for the regions is committed as an example here:
 Usage
 =====
 
-To scrap data of a give zone type (city, epci, department or region) on a given fiscal
+To crawl data of a give zone type (***city***, ***epci***, ***department*** or ***region***) on a given fiscal
 year YYYY, run in the root dir:
 
-`scrapy crawl localfinance -o scraped_data_dir/zonetype_YYYY.json -t csv -a year=YYYY` -a zone_type=zonetype
+`scrapy crawl localfinance -o scraped_data_dir/zonetype_YYYY.json -t jsonlines -a year=YYYY -a zone_type=zonetype`
 
-To scrap data for all available fiscal years for a given zone type:
+To scrape data for all available years for a given zone type:
 
 `source bin/crawl_all_years.sh zonetype`
 
@@ -29,8 +29,10 @@ header, run:
 
 `source bin/bundle_data.sh zonetype`
 
-This command will generate a file in nosdonnees/zonetype_all.csv which you can
+This command will generate a file in nosdonnees/zonetype_all.csv which you can then
 upload on [nosdonnees.fr](http://www.nosdonnees.fr) website.
+
+The last uploaded dataset is currently available [here](http://www.nosdonnees.fr/dataset/donnees-comptables-et-fiscales-des-collectivites-locales).
 
 
 
