@@ -168,10 +168,11 @@ class LocalFinanceSpider(Spider):
 
         h3_strings = hxs.xpath("//body/h3/text()").extract()
 
-        if h3_strings and h3_strings[0].startswith(u'Aucune donn\xe9es'):
-            return []
+        region_id, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
 
-        dep, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
+        if h3_strings and h3_strings[0].startswith(u'Aucune donn\xe9e'):
+            self.logger.warning("No data found for region=%s and year=%s (%s)" % (region_id, year, response.url))
+            return
 
-        data = RegionZoneParser(dep, year, response.url).parse(hxs)
-        return LocalFinance(id=dep, data=data)
+        data = RegionZoneParser(region_id, year, response.url).parse(hxs)
+        return LocalFinance(id=region_id, data=data)
