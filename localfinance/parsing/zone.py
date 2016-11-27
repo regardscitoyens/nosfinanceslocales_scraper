@@ -135,7 +135,7 @@ class CityZoneParser(BaseZoneParser):
         year = int(self.data['year'])
 
         if year > 2010:
-            self.account = DocumentMapper("data/mapping/city_2012.yaml")
+            self.account = DocumentMapper("data/mapping/city_2011.yaml")
             self.tax_parser = CityTaxParser(self.account)
         elif 2008 < year < 2011:
             self.account = DocumentMapper("data/mapping/city_2009.yaml")
