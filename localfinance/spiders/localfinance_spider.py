@@ -154,20 +154,19 @@ class LocalFinanceSpider(Spider):
         hxs = Selector(response)
 
         h3_strings = hxs.xpath("//body/h3/text()").extract()
+        department_id, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
 
-        if h3_strings and h3_strings[0].startswith(u'Aucune donn\xe9es'):
-            return []
+        if h3_strings and h3_strings[0].startswith(u'Aucune donn\xe9e'):
+            self.logger.warning("No data found for department=%s and year=%s (%s)" % (department_id, year, response.url))
+            return
 
-        dep, year = re.search('dep=(\w{3})&exercice=(\d{4})', response.url).groups()
-
-        data = DepartmentZoneParser(dep, year, response.url).parse(hxs)
-        return LocalFinance(id=dep, data=data)
+        data = DepartmentZoneParser(department_id, year, response.url).parse(hxs)
+        return LocalFinance(id=department_id, data=data)
 
     def parse_reg(self, response):
         hxs = Selector(response)
 
         h3_strings = hxs.xpath("//body/h3/text()").extract()
-
         region_id, year = re.search('reg=(\w{3})&exercice=(\d{4})', response.url).groups()
 
         if h3_strings and h3_strings[0].startswith(u'Aucune donn\xe9e'):
