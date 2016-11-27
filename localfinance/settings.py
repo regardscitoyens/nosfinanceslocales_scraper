@@ -12,7 +12,7 @@ SPIDER_MODULES = ['localfinance.spiders']
 NEWSPIDER_MODULE = 'localfinance.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'localgouv (+http://www.yourdomain.com)'
+USER_AGENT = 'RegardsCitoyens (+https://regardscitoyens.org)'
 
 DOWNLOAD_DELAY = 0.1
 
