@@ -13,7 +13,7 @@ from ..parsing.zone import (
     RegionZoneParser
 )
 from ..item import LocalFinance
-from ..utils import DOM_DEP_MAPPING, uniformize_code, convert_dom_code, get_dep_code_from_com_code, convert_city
+from ..utils import DOM_DEP_MAPPING, uniformize_code, convert_dom_code, convert_city
 
 
 class LocalFinanceSpider(Spider):
