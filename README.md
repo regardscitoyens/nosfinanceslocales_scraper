@@ -27,7 +27,7 @@ To scrape data for all available years for a given zone type:
 To generate a csv file with all data for a given zonetype and with french
 header, run:
 
-`source bin/bundle_data.sh zonetype`
+`python bin/make_csv.py zonetype`
 
 This command will generate a file in nosdonnees/zonetype_all.csv which you can then
 upload on [nosdonnees.fr](http://www.nosdonnees.fr) website.
