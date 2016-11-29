@@ -17,7 +17,7 @@ if [ $zone_type = "epci" ]; then
     startyear=2007
 fi
 
-for year in $(seq $startyear 2014);
+for year in $(seq $startyear 2015);
 do
     scrapy crawl localfinance -o scraped_data/${zone_type}_$year.json -t jsonlines -a year=$year -a zone_type=$zone_type
 done
