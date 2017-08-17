@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from document_mapper import DocumentMapper
+from .document_mapper import DocumentMapper
 
 from .finance import (
     CityFinanceParser,
