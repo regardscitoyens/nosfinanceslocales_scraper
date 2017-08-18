@@ -16,11 +16,11 @@ from localfinance.utils import get_all_variables_by_locality
 MAPPING_FILES = os.listdir('data/mapping')
 
 
-def make_csv():
+def make_csv(zone_types):
     data_files = os.listdir('scraped_data')
     fieldnames_by_locality = get_all_variables_by_locality()
 
-    for zone_type in ['epci']:
+    for zone_type in zone_types:
         print "Make %s csv..." % zone_type
 
         locality_data_files = [data_file for data_file in data_files if zone_type in data_file]
@@ -53,5 +53,11 @@ def make_csv():
                         data = json.loads(line, encoding='utf-8')['data']
                         csv_output.writerow(data)
 
+if __name__ == '__main__':
+    zone_type = sys.argv[1]
 
-make_csv()
+    if zone_type == 'all':
+        make_csv(['region', 'department', 'epci', 'city'])
+
+    else:
+        make_csv([zone_type])
